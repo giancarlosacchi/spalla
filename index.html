@@ -233,8 +233,7 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .fig circle.gap{fill:var(--gapc)}
 .fig path.ac{stroke:var(--acc)}
 .fig circle.ac{fill:var(--acc)}
-.fig .wpl{fill:currentColor;opacity:.12;stroke:currentColor;stroke-opacity:.35;stroke-width:1.2}
-.fig .wfill{fill:currentColor;opacity:.12}
+.fig .wfill{fill:currentColor;opacity:.06}
 .fig .wh{stroke:currentColor;stroke-width:1.3;opacity:.3}
 .fig .wl{stroke:currentColor;stroke-width:3;opacity:.8}
 .fig .tbl{fill:currentColor;opacity:.5}
@@ -397,8 +396,10 @@ function rings(p, t, eff) {
   return s;
 }
 function wallV(x, y1, y2, side) {
-  const w = 22, x0 = side > 0 ? x : x - w;
-  return `<rect class="wfill" x="${x0}" y="${y1}" width="${w}" height="${y2 - y1}" rx="3"/><path class="wl" d="M${x} ${y1}V${y2}"/>`;
+  const w = 18, x0 = side > 0 ? x : x - w;
+  let d = '';
+  for (let y = y1 + 10; y <= y2; y += 9) d += `M${x} ${y}l${side * 11} -9`;
+  return `<rect class="wfill" x="${x0}" y="${y1}" width="${w}" height="${y2 - y1}"/><path class="wh" d="${d}"/><path class="wl" d="M${x} ${y1}V${y2}"/>`;
 }
 const label = s => `<text x="2" y="10">${s}</text>`;
 const floorLine = '<path class="floor" d="M14 193H186"/>';
@@ -489,50 +490,6 @@ function topIso(o) {
   };
 }
 
-/* ---- rotazioni (Spalla, Avambraccio, Palmo): busto visto di fronte e un po' dall'alto ----
-   Coordinate 3D in metri circa: x = verso il fianco sinistro, y = in alto, z = in avanti.
-   La telecamera è davanti, un filo a destra e in alto: così l'avambraccio che va in avanti si vede bene
-   e il muro sta di lato al braccio, come nella realtà. */
-function projector(SC, OX, OY, Y0 = 1.25, yaw = -40, pitch = 14) {
-  const ca = Math.cos(yaw * D), sa = Math.sin(yaw * D), ce = Math.cos(pitch * D), se = Math.sin(pitch * D);
-  return ([x, y, z]) => {
-    const sx = x * ca - z * sa, depth = x * sa + z * ca;
-    return [OX + sx * SC, OY + (-(y - Y0) * ce + depth * se) * SC];
-  };
-}
-function bust3D(P, SC, far = true) {
-  // testa, spalle, busto e braccio destro rilassato (grigi)
-  return `<g class="bd">${line([P([0, 1.40, 0]), P([0, 1.03, 0])], .21 * SC)}${line([P([-.19, 1.44, 0]), P([.19, 1.44, 0])], .085 * SC)}`
-    + (far ? line([P([-.2, 1.43, 0]), P([-.22, 1.16, 0]), P([-.22, .93, .02])], .065 * SC) : '')
-    + dot(P([0, 1.63, 0]), .085 * SC) + `</g>`;
-}
-function rotIso(o) {
-  const SC = 190, P = projector(SC, 80, 96);
-  const Sh = [.19, 1.44, 0], E0 = [.2, 1.16, 0];
-  const wall = o.wall, wp = [[wall.x, wall.y0, wall.z0], [wall.x, wall.y1, wall.z0], [wall.x, wall.y1, wall.z1], [wall.x, wall.y0, wall.z1]].map(P);
-  const wallSvg = `<path class="wpl" d="M${wp.map(pt).join('L')}Z"/><path class="wl" d="M${pt(P([wall.x, wall.y0, wall.edge]))}L${pt(P([wall.x, wall.y1, wall.edge]))}"/>`;
-  const hit3 = o.hit, hit = P(hit3);
-  return {
-    lab: 'DI FRONTE', mirror: false,
-    // il muro esterno sta dietro al busto, lo stipite interno davanti
-    still: o.dir > 0 ? wallSvg + bust3D(P, SC) : bust3D(P, SC) + wallSvg,
-    draw(t, b, eff) {
-      const bb = ease(clamp(b * 1.6)), br = ease(clamp((b - .4) / .6));
-      const beta = lerp(12, 90, bb) * D, phi = lerp(o.phi0, 0, br) * D;    // l'avambraccio sale in avanti, poi ruota fino al muro
-      const dir = [Math.sin(phi) * Math.sin(beta), -Math.cos(beta), Math.cos(phi) * Math.sin(beta)];
-      const push = (eff * .006 + (eff > .4 && !REDUCE ? Math.sin(t * 52) * .002 * eff : 0)) * o.dir;
-      const E = [E0[0] + push * .4, E0[1], E0[2]];
-      const H = [E[0] + dir[0] * .25 + push, E[1] + dir[1] * .25, E[2] + dir[2] * .25];
-      const F = [E[0] + dir[0] * .285 + push, E[1] + dir[1] * .285, E[2] + dir[2] * .285];
-      const a0 = [hit3[0] + o.dir * .03, hit3[1], hit3[2]], a1 = [hit3[0] + o.dir * (.15 + eff * .02), hit3[1], hit3[2]];
-      return dot(P(Sh), 12 + 3 * eff, 'glow', ` opacity="${f(eff * 35) / 100}"`)
-        + limb([P(Sh), P(E), P(H)], .07 * SC, P(F), .05 * SC)
-        + rings(hit, t, eff * br)
-        + arrowPath(P(a0), P(a1), (.22 + .78 * eff) * br);
-    }
-  };
-}
-
 /* ---- disegni del pendolo ---- */
 const AMP = 24;
 // Tutti e tre i movimenti usano lo stesso omino: busto in avanti, mano libera sul tavolo, braccio che pende.
@@ -578,14 +535,12 @@ const EX = [
   { name: 'Gomito contro la parete', short: 'Gomito', cue: 'Schiena vicino al muro. Spingi il gomito indietro.',
     fig: () => sideIso({ th1: -24, dir: [-1, 0], hit: [71, 100], arrow: [[64, 100], [41, 100]], scene: wallV(71, 24, 192, -1) }) },
   { name: 'Spalla contro la parete', short: 'Spalla', cue: 'Fianco al muro, gomito a 90°. Ruota verso l’esterno e spingi contro il muro.',
-    // muro lungo tutto il fianco e l'avambraccio
-    fig: () => rotIso({ phi0: -30, dir: 1, hit: [.245, 1.16, .2], wall: { x: .245, y0: .98, y1: 1.56, z0: -.12, z1: .38, edge: .38 } }) },
+    fig: () => topIso({ phi0: -26, dir: [1, 0], hit: [137, 100], arrow: [[143, 100], [166, 100]], scene: wallV(137, 30, 150, 1) }) },
   { name: 'Avambraccio contro la parete', short: 'Avambraccio', cue: 'Come per la spalla, ma il muro arriva solo a metà avambraccio: mano libera oltre lo spigolo. Ruota verso l’esterno.',
-    // come la spalla, ma il muro finisce a metà avambraccio: mano libera oltre lo spigolo
-    fig: () => rotIso({ phi0: -30, dir: 1, hit: [.245, 1.16, .08], wall: { x: .245, y0: .98, y1: 1.56, z0: -.12, z1: .13, edge: .13 } }) },
+    // come la spalla (vista dall'alto), ma il muro finisce a metà avambraccio: lo spigolo è a y=104
+    fig: () => topIso({ phi0: -26, dir: [1, 0], hit: [137, 113], arrow: [[143, 113], [166, 113]], scene: wallV(137, 104, 150, 1) }) },
   { name: 'Palmo contro la parete', short: 'Palmo', cue: 'Palmo contro lo stipite, come per chiudere una porta. Spingi verso la pancia.',
-    // stipite della porta sul lato interno della mano
-    fig: () => rotIso({ phi0: 30, dir: -1, hit: [.15, 1.16, .285], wall: { x: .13, y0: .9, y1: 1.5, z0: .19, z1: .3, edge: .3 } }) },
+    fig: () => topIso({ phi0: 26, dir: [-1, 0], hit: [121, 80], arrow: [[115, 80], [92, 80]], scene: wallV(121, 34, 96, -1) }) },
   { name: 'Pugno sul tavolo', short: 'Tavolo', cue: 'Gomito a 90°, pugno sul tavolo. Spingi verso il basso.',
     fig: () => sideIso({ th1: 0, dir: [0, 1], hit: [123, 111], arrow: [[123, 64], [123, 89]],
       scene: '<rect class="tbl" x="106" y="111" width="92" height="7" rx="2"/><rect class="tbl" x="114" y="118" width="5" height="74"/><rect class="tbl" x="188" y="118" width="5" height="74"/>' }) },
@@ -1136,29 +1091,23 @@ function hideRemind(now) {
   spr.to = 0;
 }
 // Le due figure: braccio che si chiude contro il fianco; petto che si apre e spalle indietro.
-// Le due figure del promemoria, nello stesso stile degli esercizi.
-const RM_P = projector(88, 36, 42, 1.3);
+// Le due figure: braccio che si chiude contro il fianco; petto che si apre e spalle indietro.
 function remindDraw(t) {
   const e = (performance.now() - remindAt) / 1000;
-  const s1 = REDUCE ? 1 : ease(clamp((e - .3) / .7));
-  const s2 = REDUCE ? 1 : ease(clamp((e - .55) / .8));
-  // ASCELLA ATTACCATA: busto di fronte, il braccio parte staccato e si chiude contro il fianco
-  const P = RM_P, Sh = [.19, 1.44, 0], th = lerp(34, 2, s1) * D;
-  const E = [Sh[0] + Math.sin(th) * .28, Sh[1] - Math.cos(th) * .28, 0];
-  const H = [E[0], E[1], E[2] + .22], F = [E[0], E[1], E[2] + .25];
-  rmA.innerHTML = bust3D(P, 88)
-    + rings(P([.21, 1.37, 0]), t, s1)
-    + limb([P(Sh), P(E), P(H)], 7.5, P(F), 4.8)
-    + arrowPath(P([E[0] + .2, E[1], 0]), P([E[0] + .07, E[1], 0]), s1 * (1 - s1 * .4) + .2);
-  // PETTO IN FUORI: busto di lato, da curvo a dritto (petto avanti, spalle indietro, testa su)
-  const k = s2;
-  const sh = [lerp(47, 38, k), lerp(31, 27, k)], c = [lerp(30, 50, k), 50], hd = [lerp(55, 43, k), lerp(17, 12, k)];
-  const torso = `M40 74Q${f(c[0])} ${f(c[1])} ${f(sh[0])} ${f(sh[1])}`;
-  const chest = `M${f(sh[0] + 6)} ${f(sh[1] + 5)}Q${f(c[0] + 8)} ${f(c[1] - 2)} 47 70`;
-  rmB.innerHTML = `<g class="bd"><path stroke-width="17" d="${torso}"/>${dot(hd, 8)}${line([sh, [sh[0] - 1, sh[1] + 20], [sh[0] + 1, sh[1] + 38]], 6)}</g>`
-    + `<path class="gap" stroke-width="10" d="${chest}"/><path class="ac" stroke-width="4.5" d="${chest}"/>`
-    + arrowPath([c[0] + 12, 46], [c[0] + 24, 46], k)
-    + arrowPath([sh[0] + 4, sh[1] - 7], [sh[0] - 8, sh[1] - 7], k * .9);
+  const s1 = REDUCE ? 1 : ease(clamp((e - .35) / .7));
+  const s2 = REDUCE ? 1 : ease(clamp((e - .6) / .7));
+  // ascella (di fronte, braccio sinistro = a destra di chi guarda)
+  const Sh = [55, 31], a = lerp(32, 4, s1), E = pol(Sh, 19, a), H = [E[0] - 1, E[1] + 7];
+  rmA.innerHTML = `<g class="bd">${dot([40, 14], 7.5)}${line([[25, 31], [55, 31]], 9)}${line([[40, 34], [40, 64]], 20)}${line([[25, 32], [22, 54]], 7)}</g>`
+    + rings([51, 38], t, s1 * .9)
+    + limb([Sh, E, H], 7.5, H, 4.5)
+    + arrowPath([77, 46], [66, 46], s1);
+  // petto (di lato): il petto va avanti, le spalle indietro
+  const c = lerp(40, 54, s2), sx = lerp(41, 35, s2);
+  rmB.innerHTML = `<g class="bd"><path stroke-width="16" d="M38 66Q${f(c)} 46 ${f(sx)} 29"/>${dot([sx + 4, 14], 7.5)}${line([[sx, 31], [sx - 1, 50], [sx + 1, 62]], 6)}</g>`
+    + `<path class="gap" stroke-width="11" d="M${f(c - 7)} 33Q${f(c + 1)} 41 ${f(c - 6)} 52"/><path class="ac" stroke-width="5" d="M${f(c - 7)} 33Q${f(c + 1)} 41 ${f(c - 6)} 52"/>`
+    + arrowPath([c + 4, 42], [c + 15, 42], s2)
+    + arrowPath([sx + 2, 22], [sx - 8, 22], s2 * .8);
 }
 function remindFrame(dt, t) {
   if (remindEl.hidden) return;
