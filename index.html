@@ -134,54 +134,51 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .toggle svg{width:20px;height:20px}
 .toggle.on{color:var(--ink)}
 
-/* ---- home v2 ---- */
-.home{gap:14px;padding-bottom:0}
-.h-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+/* ---- home v3: titolo + anello in alto, programma al centro, tasti in basso.
+   Le card hanno proporzioni fisse: non si schiacciano mai, al massimo la pagina scorre. ---- */
+.home{gap:18px;padding-bottom:0}
+.h-top{display:flex;justify-content:space-between;align-items:center;gap:16px}
 .h-top .eyebrow{text-transform:uppercase}
-.home .h-top h1{font-size:clamp(52px,15vw,72px);margin-top:6px}
-.icon.off{opacity:.55}
-.h-hero{position:relative;isolation:isolate;width:min(50vw,24vh,220px);aspect-ratio:1;align-self:center;margin-top:6px;flex-shrink:0}
-.h-hero::before{content:"";position:absolute;inset:-22%;z-index:-1;border-radius:50%;background:radial-gradient(closest-side,rgba(255,106,26,.26),rgba(255,106,26,.08) 55%,transparent);animation:glow 6s ease-in-out infinite}
+.home .h-top h1{font-size:clamp(52px,15vw,72px);margin:6px 0 0}
+.h-sub{margin-top:8px;color:var(--muted);font-size:15px;font-weight:500}
+.h-sub b{color:var(--ink);font-weight:600}
+.h-hero{position:relative;isolation:isolate;width:clamp(96px,28vw,124px);aspect-ratio:1;flex-shrink:0}
+.h-hero::before{content:"";position:absolute;inset:-34%;z-index:-1;border-radius:50%;background:radial-gradient(closest-side,rgba(255,106,26,.24),rgba(255,106,26,.07) 55%,transparent);animation:glow 6s ease-in-out infinite}
 @keyframes glow{50%{transform:scale(1.08);opacity:.7}}
 .h-hero .ring{width:100%;height:100%}
-.h-hero .ring circle{stroke-width:2.8}
-.h-hero .ring .rt{opacity:.13}
+.h-hero .ring circle{stroke-width:3.6}
+.h-hero .ring .rt{opacity:.14}
 .h-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-.h-center b{font-family:var(--display);font-weight:600;font-size:clamp(76px,23vw,104px);line-height:.8;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.h-center span{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:10px}
-.h-center .ok{width:64px;height:64px;color:var(--orange);display:block}
-.h-meta{text-align:center;color:var(--muted);font-size:15px;margin-top:-4px}
-.h-meta b{color:var(--ink);font-weight:600}
-.home .week{align-self:center;width:100%;max-width:300px;justify-content:space-between}
-.home .week .d i{max-width:12px;border-width:1.5px}
-.home .week .d.on i{box-shadow:0 0 12px rgba(255,106,26,.55)}
-.h-plan{display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.h-center b{font-family:var(--display);font-weight:600;font-size:clamp(34px,10vw,44px);line-height:.85;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.h-center span{font-family:var(--display);font-weight:600;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.h-center .ok{width:38px;height:38px;color:var(--orange);display:block}
+.h-plan{display:flex;flex-direction:column;gap:12px;margin:auto 0}
 .h-sec{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
 .h-sec span:first-child{color:var(--ink);font-size:15px}
 .h-sec span:last-child{color:var(--muted);text-align:right}
-.h-plan{flex:1 1 auto;min-height:0}
-.h-grid{flex:1 1 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(84px,1fr);gap:10px;min-height:0}
-.pc{cursor:pointer;transition:transform .2s cubic-bezier(.3,1.4,.4,1);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px 6px 12px;border-radius:22px;background:var(--panel);--gapc:var(--panel);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.06);min-width:0;min-height:0}
+.h-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pc{cursor:pointer;transition:transform .2s cubic-bezier(.3,1.4,.4,1);position:relative;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;align-items:center;gap:2px;padding:8px 6px 11px;border-radius:22px;background:var(--panel);--gapc:var(--panel);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.06);min-width:0;aspect-ratio:1/1.1;overflow:hidden}
 .pc:active{transform:scale(.95)}
-.pc .fig{flex:1 1 auto;width:100%;height:auto;min-height:0;max-height:150px;margin:0;transform:scale(1.3);transform-origin:50% 92%}
+.pc .fig{width:100%;height:100%;min-height:0;transform:scale(1.12);transform-origin:50% 52%}
 .pc .fig text{display:none}
-.pc b{font-family:var(--display);font-weight:700;font-size:15px;line-height:1;text-transform:uppercase;letter-spacing:.03em;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
-.pc .pn{position:absolute;top:9px;left:12px;font-family:var(--display);font-weight:700;font-size:14px;color:var(--muted)}
-.pc.pd{grid-column:1/-1;flex-direction:row;gap:16px;--acc:var(--blue)}
-.pc.pd .fig{flex:0 1 auto;width:auto;height:100%;max-height:120px;aspect-ratio:1}
-.pc.pd b{font-size:18px}
+.pc b{position:relative;font-family:var(--display);font-weight:700;font-size:14px;line-height:1;text-transform:uppercase;letter-spacing:.03em;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc .pn{position:absolute;z-index:1;top:9px;left:12px;font-family:var(--display);font-weight:700;font-size:13px;color:var(--muted)}
+.pc.pd{grid-column:1/-1;aspect-ratio:auto;height:clamp(84px,11vh,104px);grid-template-rows:none;grid-template-columns:auto 1fr;justify-items:start;gap:14px;padding:4px 18px 4px 14px;--acc:var(--blue)}
+.pc.pd .fig{width:auto;height:100%;aspect-ratio:1;transform:scale(1.25);transform-origin:50% 60%}
+.pc.pd b{font-size:17px}
 .pc.pd .pn{color:var(--blue)}
-.home .actions{position:sticky;bottom:0;margin:auto -22px 0;padding:22px 22px calc(env(safe-area-inset-bottom,0px) + 22px);background:linear-gradient(to bottom,transparent,var(--bg) 38%);gap:4px;align-items:center}
-.home .go{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:12px}
+.home .actions{position:sticky;bottom:0;margin:0 -22px;padding:14px 22px calc(env(safe-area-inset-bottom,0px) + 20px);background:linear-gradient(to bottom,transparent,var(--bg) 30%);display:flex;flex-direction:row;align-items:stretch;gap:10px}
+.home .actions .snd{width:64px;height:auto;min-height:64px;border-radius:20px}
+.home .actions .snd svg{width:22px;height:22px}
+.home .go{flex:1 1 auto;width:auto;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:12px}
 .home .go svg{width:24px;height:24px;flex-shrink:0}
 .home .go small{font-family:var(--body);font-weight:600;font-size:14px;letter-spacing:0;text-transform:none;opacity:.7}
 .home .go::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.4) 50%,transparent 65%);transform:translateX(-120%);animation:shine 5s ease-in-out 1.4s infinite}
 @keyframes shine{0%{transform:translateX(-120%)}28%,100%{transform:translateX(120%)}}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1 1 auto}
 .two .go{flex-direction:column;gap:3px;min-height:70px;font-size:24px}
 .go.alt{background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 1px 0 rgba(255,255,255,.08)}
 .home .go.alt::after{display:none}
-.linkbtn{min-height:44px;padding:0 12px;color:var(--muted);font-weight:600;font-size:15px}
 
 /* ---- ready ---- */
 .ready .mid{flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;min-height:0}
@@ -794,10 +791,8 @@ function homeView() {
   const canResume = prog && prog.started && prog.i >= 0 && prog.i < STEPS.length && Date.now() - prog.at < 6 * 3600e3;
   const doneToday = readLog().some(x => dayDiff(x) === 0);
   S.homeFr = doneToday && !canResume ? SEGW.map(() => 1) : SEGW.map(() => 0);
-  const center = doneToday && !canResume ? `<i class="ok">${CHECK}</i><span>Fatto oggi</span>` : `<b>${mins}</b><span>minuti</span>`;
+  const center = doneToday && !canResume ? `<i class="ok">${CHECK}</i>` : `<b>${mins}</b><span>min</span>`;
   const date = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
-  const stk = streak();
-  const meta = '';
 
   // carosello: ogni card ha la sua figura animata
   S.homeFigs = [...EX.map(e => e.fig()), PEND[0].fig()];
@@ -811,14 +806,15 @@ function homeView() {
     : `<button class="go" data-act="start"><span>${doneToday ? 'Allenati ancora' : 'Inizia'}</span>${ARROW}</button>`;
 
   return `<div class="screen home enter">
-    <header class="h-top"><div><div class="eyebrow">${date}</div><h1>Spalla</h1></div><button class="icon glass" data-act="sound" data-sound-icon aria-label="Suono"></button></header>
-    <section class="h-hero" aria-label="Avanzamento di oggi">${ring(SEGW.map(() => 0))}<div class="h-center">${center}</div></section>
-    ${meta ? `<div class="h-meta">${meta}</div>` : ''}
+    <header class="h-top">
+      <div><div class="eyebrow">${date}</div><h1>Spalla</h1><div class="h-sub">${doneToday && !canResume ? '<b>Fatto oggi</b> · ' : ''}${EX.length} esercizi · ${CFG.rounds} giri</div></div>
+      <section class="h-hero" aria-label="Avanzamento di oggi">${ring(SEGW.map(() => 0))}<div class="h-center">${center}</div></section>
+    </header>
     <section class="h-plan">
-      <div class="h-sec"><span>Il programma</span><span>${CFG.rounds} giri · ${CFG.push}″ spingi ${CFG.rest}″ riposo</span></div>
+      <div class="h-sec"><span>Il programma</span><span>${CFG.push}″ spingi · ${CFG.rest}″ riposo</span></div>
       <div class="h-grid">${cards}</div>
     </section>
-    <div class="actions">${actions}</div>
+    <div class="actions"><button class="icon glass snd" data-act="sound" data-sound-icon aria-label="Suono"></button>${actions}</div>
   </div>`;
 }
 function readyView(st) {
