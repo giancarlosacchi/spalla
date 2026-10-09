@@ -229,6 +229,9 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .fig .bd{opacity:.42}
 .fig .bd path{stroke:currentColor}
 .fig .bd circle{fill:currentColor}
+.fig .th-gap path,.fig .th-gap ellipse{fill:var(--gapc);stroke:var(--gapc);stroke-width:5;stroke-linejoin:round}
+.fig .th{opacity:.62}
+.fig .th path,.fig .th ellipse{fill:currentColor;stroke:none}
 .fig path.gap{stroke:var(--gapc)}
 .fig circle.gap{fill:var(--gapc)}
 .fig path.ac{stroke:var(--acc)}
@@ -419,12 +422,15 @@ const FRONT_BODY = `<g class="bd">
   ${dot([96, 48], 13)}
   ${line([[78, 76], [74, 104], [73, 128]], 11)}
 </g>`;
+// Testa vista dall'alto: ovale un po' allungato, naso attaccato davanti e due orecchie ai lati.
+// Ha un bordo del colore dello sfondo e un grigio più chiaro delle spalle, così si stacca da loro.
+const TOP_HEAD = `<ellipse cx="96" cy="111" rx="12.5" ry="13.5"/><ellipse cx="96" cy="97.6" rx="3.4" ry="2.8"/>`
+  + `<ellipse cx="83.2" cy="111" rx="2.1" ry="3.6"/><ellipse cx="108.8" cy="111" rx="2.1" ry="3.6"/>`;
 const TOP_BODY = `<g class="bd">
-  ${line([[70, 118], [122, 118]], 22)}
-  ${dot([96, 115], 13)}
-  ${dot([96, 99], 3.5)}
-  ${dot([64, 122], 6.5)}
-</g>`;
+  ${line([[72, 118], [120, 118]], 24)}
+</g>
+<g class="th-gap">${TOP_HEAD}</g>
+<g class="th">${TOP_HEAD}</g>`;
 
 /* ---- disegni degli isometrici ----
    b = arrivo in posizione (0→1), eff = forza (0→1), t = secondi */
