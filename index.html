@@ -162,13 +162,14 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .h-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .pc{cursor:pointer;transition:transform .2s cubic-bezier(.3,1.4,.4,1);position:relative;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;align-items:center;gap:2px;padding:8px 6px 11px;border-radius:22px;background:var(--panel);--gapc:var(--panel);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.06);min-width:0;aspect-ratio:1/1.1;overflow:hidden}
 .pc:active{transform:scale(.95)}
-.pc .fig{width:100%;height:100%;min-height:0;transform:scale(1.12);transform-origin:50% 52%}
+.pc .fig{width:100%;height:100%;min-height:0}
+.pc .floor{display:none}
 .pc .ready .fig text,.work .fig text{display:none}
 .fig text{display:none}
 .pc b{position:relative;font-family:var(--display);font-weight:700;font-size:14px;line-height:1;text-transform:uppercase;letter-spacing:.03em;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pc .pn{position:absolute;z-index:1;top:9px;left:12px;font-family:var(--display);font-weight:700;font-size:13px;color:var(--muted)}
 .pc.pd{grid-column:1/-1;aspect-ratio:auto;height:clamp(84px,11vh,104px);grid-template-rows:none;grid-template-columns:auto 1fr;justify-items:start;gap:14px;padding:4px 18px 4px 14px;--acc:var(--blue)}
-.pc.pd .fig{width:auto;height:100%;aspect-ratio:1;transform:scale(1.25);transform-origin:50% 60%}
+.pc.pd .fig{width:auto;height:100%;aspect-ratio:1}
 .pc.pd b{font-size:17px}
 .pc.pd .pn{color:var(--blue)}
 .home .actions{position:sticky;bottom:0;margin:0 -22px;padding:14px 22px calc(env(safe-area-inset-bottom,0px) + 20px);background:linear-gradient(to bottom,transparent,var(--bg) 30%);display:flex;flex-direction:row;align-items:stretch;gap:10px}
@@ -1015,6 +1016,23 @@ function goHome() {
   S.homeAt = performance.now();
   S.screen = 'home'; S.paused = false; sheet.hidden = true;
   render(homeView(), false);
+  fitCards();
+}
+/* Centra ogni omino nella sua card: misuro il disegno reale (anche con il braccio nelle varie posizioni,
+   la freccia e il muro) e inquadro un quadrato centrato, con lo stesso margine per tutti. */
+function fitCards() {
+  stage.querySelectorAll('.base .pc .fig').forEach((svg, k) => {
+    const fg = S.homeFigs[k], dyn = svg.querySelector('.dyn');
+    if (!fg || !dyn) return;
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    [[0, 0], [1, Math.PI / 2], [1, -Math.PI / 2], [0, Math.PI]].forEach(([eff, ang]) => {
+      dyn.innerHTML = fg.draw(0, 1, eff, ang);
+      try { const bb = svg.getBBox(); x0 = Math.min(x0, bb.x); y0 = Math.min(y0, bb.y); x1 = Math.max(x1, bb.x + bb.width); y1 = Math.max(y1, bb.y + bb.height); } catch {}
+    });
+    if (x1 <= x0) return;
+    const pad = 16, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, side = Math.max(x1 - x0, y1 - y0) + pad * 2;
+    svg.setAttribute('viewBox', `${f(cx - side / 2)} ${f(cy - side / 2)} ${f(side)} ${f(side)}`);
+  });
 }
 function enterReady(t) {
   hideRemind();
