@@ -27,6 +27,8 @@
   --orange:#ff6a1a;    /* international orange: effort */
   --ready:#272c34;     /* graphite: waiting */
   --blue:#86b4ff;      /* pendulum: relaxed movement */
+  --red:#ff453a;       /* spingi: sforzo */
+  --green:#32d74b;     /* rilassa */
   --dark:#15110c;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -43,7 +45,11 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .layer.base{background:var(--bg);color:var(--ink);--gapc:var(--bg);--acc:var(--orange)}
 .layer.fill{background:var(--tone);color:var(--tink);--gapc:var(--tone);--acc:var(--tacc);clip-path:inset(100% 0 0 0);will-change:clip-path;transition:background-color .5s,color .5s}
 #stage[data-tone="ready"]{--tone:var(--ready);--tink:var(--ink);--tacc:var(--orange)}
-#stage[data-tone="push"]{--tone:var(--orange);--tink:var(--dark);--tacc:var(--dark)}
+#stage[data-tone="push"]{--tone:var(--red);--tink:var(--dark);--tacc:var(--dark)}
+#stage[data-tone="rest"]{--tone:var(--green);--tink:var(--dark);--tacc:var(--dark)}
+#stage[data-tone="done"]{--tone:var(--orange);--tink:var(--dark);--tacc:var(--dark)}
+#stage[data-tone="push"] .base{--acc:var(--red)}
+#stage[data-tone="rest"] .base{--acc:var(--green)}
 #stage[data-tone="pend"]{--tone:var(--blue);--tink:var(--dark);--tacc:var(--dark)}
 #stage[data-tone="pend"] .base{--acc:var(--blue)}
 
@@ -81,10 +87,8 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 /* numeri che scorrono, come il timer di iOS */
 .swap{display:inline-grid}
 .swap > span{grid-area:1/1}
-.sw-in{animation:swIn .75s cubic-bezier(.22,.61,.36,1) both}
-.sw-out{animation:swOut .6s cubic-bezier(.4,0,.6,1) both}
-@keyframes swIn{from{opacity:0;transform:translateY(.08em) scale(.97);filter:blur(10px)}}
-@keyframes swOut{to{opacity:0;transform:translateY(-.06em) scale(1.03);filter:blur(10px)}}
+.sw-in{animation:swIn .22s ease-out both}
+@keyframes swIn{from{opacity:.35}}
 .sub{opacity:.6}
 .eyebrow{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;opacity:.6}
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.1em;text-transform:uppercase;min-height:44px}
@@ -239,17 +243,14 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .fig text{fill:currentColor;font-family:var(--display);font-weight:600;font-size:11px;letter-spacing:.16em;opacity:.45}
 
 /* ---- promemoria postura (popup a molla, mosso da JS) ---- */
-#remind{position:fixed;inset:0;z-index:4;display:grid;place-items:center;pointer-events:none;padding:0 22px;--gapc:#1c1f25;--acc:var(--orange)}
-#remind .card{width:min(100%,340px);box-sizing:border-box;padding:18px 16px 20px;border-radius:34px;color:var(--ink);
-  background:rgba(22,24,29,.62);-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 0 0 1px rgba(255,255,255,.08),0 30px 80px rgba(0,0,0,.45);
-  display:flex;flex-direction:column;align-items:center;gap:6px;will-change:transform,opacity;transform-origin:50% 60%}
-#remind .eyebrow{color:var(--orange);opacity:1}
-#remind .cols{display:grid;grid-template-columns:1fr 1px 1fr;align-items:start;width:100%}
-#remind .sep{align-self:stretch;background:rgba(255,255,255,.1);margin:14px 0}
-#remind .col{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
-#remind .col .fig{width:110px;height:110px}
-#remind .col b{font-family:var(--display);font-weight:700;font-size:24px;line-height:.95;text-transform:uppercase;letter-spacing:.01em}
+#remind{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 82px);z-index:4;display:flex;justify-content:center;pointer-events:none;padding:0 22px;--gapc:#1c1f25;--acc:var(--orange)}
+#remind .card{display:flex;align-items:center;gap:2px;padding:5px 18px 5px 8px;border-radius:999px;color:var(--ink);
+  background:rgba(22,24,29,.66);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(255,255,255,.08),0 10px 30px rgba(0,0,0,.3);
+  will-change:transform,opacity;transform-origin:50% 0}
+#remind .fig{width:46px;height:46px;flex-shrink:0}
+#remind .rt{display:flex;flex-direction:column;margin-left:8px}
+#remind .rt b{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.07em;text-transform:uppercase;line-height:1.2;white-space:nowrap}
 
 /* ---- come si fa (pannello dalla Home) ---- */
 #detail{position:fixed;inset:0;z-index:6;background:rgba(8,9,11,.45);display:flex;align-items:flex-end;animation:fade .25s ease-out}
@@ -307,7 +308,7 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 }
 @media (prefers-reduced-motion:reduce){
   .h-hero::before,.home .go::after,
-  .enter > *,.enter .mid > *,.enter .center > *,.tapto,.sw-in,.sw-out{animation:none}
+  .enter > *,.enter .mid > *,.enter .center > *,.tapto,.sw-in{animation:none}
 }
 </style>
 
@@ -319,12 +320,9 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 </div>
 <div id="remind" hidden aria-live="polite">
   <div class="card">
-    <div class="eyebrow">Ricorda</div>
-    <div class="cols">
-      <div class="col"><svg class="fig" viewBox="0 0 80 80" aria-hidden="true"><g id="rmA"></g></svg><b>Ascella<br>attaccata</b></div>
-      <div class="sep"></div>
-      <div class="col"><svg class="fig" viewBox="0 0 80 80" aria-hidden="true"><g id="rmB"></g></svg><b>Petto<br>in fuori</b></div>
-    </div>
+    <svg class="fig" viewBox="0 0 80 80" aria-hidden="true"><g id="rmA"></g></svg>
+    <svg class="fig" viewBox="0 0 80 80" aria-hidden="true"><g id="rmB"></g></svg>
+    <div class="rt"><b>Ascella attaccata</b><b>Petto in fuori</b></div>
   </div>
 </div>
 <div id="detail" hidden>
@@ -359,7 +357,7 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 <script>
 (() => {
 /* ================= Impostazioni ================= */
-const CFG = { push: 5, rest: 5, reps: 10, rounds: 3, ready: 10, pend: 30 };
+const CFG = { push: 5, rest: 5, reps: 10, rounds: 3, ready: 5, pend: 30 };
 const POSTURE = 'Ascella attaccata · petto in fuori';
 
 /* ================= Geometria ================= */
@@ -492,44 +490,38 @@ function topIso(o) {
 
 /* ---- disegni del pendolo ---- */
 const AMP = 24;
-function pendSide() {
-  const Sh = [120, 98], R = 66;
-  const g1 = pol(Sh, R, -AMP), g2 = pol(Sh, R, AMP);
+// Tutti e tre i movimenti usano lo stesso omino: busto in avanti, mano libera sul tavolo, braccio che pende.
+// Cambia solo la traiettoria della mano (tratteggiata).
+function pendFig(mode) {
+  const Sh = [120, 98], A = AMP * D;
+  // posizione di un punto del braccio lungo L, per un certo angolo di fase
+  const arm = (L, a) => {
+    if (mode === 'fb') { const q = A * Math.sin(a); return [Sh[0] + L * Math.sin(q), Sh[1] + L * Math.cos(q)]; }
+    if (mode === 'lat') { const q = A * Math.sin(a); return [Sh[0] + L * .2 * Math.sin(a), Sh[1] + L * Math.cos(q)]; }
+    const qx = A * Math.cos(a), qz = A * Math.sin(a);   // cerchio: avanti/indietro + verso chi guarda
+    return [Sh[0] + L * Math.sin(qx) + L * .2 * Math.sin(a), Sh[1] + L * Math.cos(qx) * Math.cos(qz * .8)];
+  };
+  // gomito sul primo tratto; l'avambraccio segue con un leggero ritardo (lag), come un vero pendolo
+  const pose = ang => {
+    const E = arm(32, ang), lag = ang - .45, h = arm(30, lag), fz = arm(33, lag);
+    return {
+      E,
+      H: [E[0] + h[0] - Sh[0], E[1] + h[1] - Sh[1]],
+      F: [E[0] + fz[0] - Sh[0], E[1] + fz[1] - Sh[1]],
+      r: 7 * (mode === 'fb' ? 1 : 1 + .2 * Math.sin(lag)),   // la mano si ingrandisce quando viene verso di te
+    };
+  };
+  let guide = '';
+  for (let k = 0; k <= 48; k++) guide += (k ? 'L' : 'M') + pt(pose(k / 48 * Math.PI * 2).F);
   return {
     lab: 'DI LATO', mirror: true,
     still: floorLine
       + `<rect class="tbl" x="158" y="116" width="40" height="6" rx="2"/><rect class="tbl" x="188" y="122" width="5" height="70"/>`
-      + `<path class="guide" d="M${pt(g1)}A${R} ${R} 0 0 0 ${pt(g2)}"/>`
+      + `<path class="guide" d="${guide}"/>`
       + `<g class="bd">${line([[64, 128], [66, 160], [64, 189], [74, 190]], 15)}${line([[64, 128], [58, 160], [54, 189], [64, 190]], 15)}<path stroke-width="23" d="M64 126Q84 96 122 96"/>${dot([139, 85], 13)}${line([[124, 97], [142, 108], [162, 114]], 11)}</g>`,
     draw(t, b, eff, ang) {
-      const a1 = AMP * Math.sin(ang), a2 = AMP * 1.15 * Math.sin(ang - .45);
-      const E = pol(Sh, 32, a1), H = pol(E, 30, a2), F = pol(E, 33, a2);
-      return limb([Sh, E, H], 12, F, 7);
-    }
-  };
-}
-function pendFront(circ) {
-  const Sh = [116, 100], R = 64;
-  const g1 = pol(Sh, R, -AMP), g2 = pol(Sh, R, AMP);
-  const guide = circ
-    ? `<ellipse class="guide" cx="${Sh[0]}" cy="${Sh[1] + 59}" rx="${f(R * Math.sin(AMP * D))}" ry="8"/>`
-    : `<path class="guide" d="M${pt(g1)}A${R} ${R} 0 0 0 ${pt(g2)}"/>`;
-  return {
-    lab: 'DI FRONTE', mirror: false,
-    still: floorLine
-      + `<rect class="tbl" x="0" y="118" width="58" height="6" rx="2"/><rect class="tbl" x="8" y="124" width="5" height="68"/>`
-      + guide
-      + `<g class="bd">${line([[90, 132], [88, 162], [86, 189], [80, 190]], 15)}${line([[106, 132], [108, 162], [110, 189], [116, 190]], 15)}${line([[98, 106], [98, 128]], 30)}${line([[80, 100], [116, 100]], 16)}${dot([98, 84], 14)}${line([[80, 101], [66, 111], [52, 117]], 11)}</g>`,
-    draw(t, b, eff, ang) {
-      if (!circ) {
-        const a1 = AMP * Math.sin(ang), a2 = AMP * 1.15 * Math.sin(ang - .45);
-        const E = pol(Sh, 32, a1), H = pol(E, 30, a2), F = pol(E, 33, a2);
-        return limb([Sh, E, H], 12, F, 7);
-      }
-      // cerchio: x = oscillazione laterale, profondità = braccio che viene verso chi guarda (si accorcia e la mano si ingrandisce)
-      const pos = (L, a) => [Sh[0] + L * Math.sin(AMP * D * Math.sin(a)), Sh[1] + L * (1 - .07 * (1 + Math.cos(a)))];
-      const E = pos(32, ang - .2), F = pos(66, ang - .5), H = pos(62, ang - .5);
-      return limb([Sh, E, H], 12, F, 7 * (1 + .16 * Math.cos(ang - .5)));
+      const P = pose(ang);
+      return limb([Sh, P.E, P.H], 12, P.F, P.r);
     }
   };
 }
@@ -552,9 +544,9 @@ const EX = [
       scene: '<rect class="tbl" x="106" y="111" width="92" height="7" rx="2"/><rect class="tbl" x="114" y="118" width="5" height="74"/><rect class="tbl" x="188" y="118" width="5" height="74"/>' }) },
 ];
 const PEND = [
-  { mode: 'fb', name: 'Avanti e indietro', cue: 'Altra mano sul tavolo, busto in avanti. Braccio morbido: lascialo oscillare avanti e indietro.', fig: pendSide },
-  { mode: 'lat', name: 'Laterale', cue: 'Ora da un lato all’altro. Movimento piccolo, spalla rilassata.', fig: () => pendFront(false) },
-  { mode: 'circ', name: 'Cerchietti', cue: 'Piccoli cerchi. A metà tempo cambia senso.', fig: () => pendFront(true) },
+  { mode: 'fb', name: 'Avanti e indietro', cue: 'Altra mano sul tavolo, busto in avanti. Braccio morbido: lascialo oscillare avanti e indietro.', fig: () => pendFig('fb') },
+  { mode: 'lat', name: 'Laterale', cue: 'Ora da un lato all’altro. Movimento piccolo, spalla rilassata.', fig: () => pendFig('lat') },
+  { mode: 'circ', name: 'Cerchietti', cue: 'Piccoli cerchi. A metà tempo cambia senso.', fig: () => pendFig('circ') },
 ];
 // st.seg = in quale arco dell'anello cade lo step
 function fullPlan() {
@@ -631,12 +623,56 @@ hap.innerHTML = '<input type="checkbox" switch tabindex="-1">';
 document.body.appendChild(hap);
 function haptic() { try { if (navigator.vibrate) navigator.vibrate(12); else hap.click(); } catch {} }
 const buzz = p => { try { if (navigator.vibrate) navigator.vibrate(p); else hap.click(); } catch {} };
+// Sforzo: un ringhio basso che sale e trema, come quando stringi i denti.
+function strain() {
+  if (!ac || !S.sound) return;
+  try {
+    const t = ac.currentTime, o = ac.createOscillator(), o2 = ac.createOscillator(), lfo = ac.createOscillator(), ld = ac.createGain();
+    const flt = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(92, t); o.frequency.exponentialRampToValueAtTime(150, t + .45);
+    o2.type = 'square'; o2.frequency.setValueAtTime(138, t); o2.frequency.exponentialRampToValueAtTime(225, t + .45);
+    lfo.frequency.value = 17; ld.gain.value = 5; lfo.connect(ld); ld.connect(o.frequency); ld.connect(o2.frequency);
+    flt.type = 'lowpass'; flt.Q.value = 7; flt.frequency.setValueAtTime(380, t); flt.frequency.linearRampToValueAtTime(1500, t + .42);
+    const g2 = ac.createGain(); g2.gain.value = .35;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.34, t + .05); g.gain.setValueAtTime(.3, t + .36); g.gain.exponentialRampToValueAtTime(.0001, t + .6);
+    o.connect(flt); o2.connect(g2).connect(flt); flt.connect(g).connect(ac.destination);
+    [o, o2, lfo].forEach(n => { n.start(t); n.stop(t + .65); });
+  } catch {}
+}
+// Rilassamento: un respiro che esce (soffio che scende) con una nota calda sotto.
+let noiseBuf = null;
+function exhale() {
+  if (!ac || !S.sound) return;
+  try {
+    const t = ac.currentTime;
+    if (!noiseBuf) { noiseBuf = ac.createBuffer(1, ac.sampleRate * 1.2, ac.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+    const n = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain();
+    n.buffer = noiseBuf; bp.type = 'bandpass'; bp.Q.value = 1.4;
+    bp.frequency.setValueAtTime(1500, t); bp.frequency.exponentialRampToValueAtTime(320, t + .95);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.42, t + .12); g.gain.exponentialRampToValueAtTime(.0001, t + 1.05);
+    n.connect(bp).connect(g).connect(ac.destination); n.start(t); n.stop(t + 1.1);
+    const o = ac.createOscillator(), og = ac.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(392, t); o.frequency.exponentialRampToValueAtTime(294, t + .9);
+    og.gain.setValueAtTime(0, t); og.gain.linearRampToValueAtTime(.12, t + .15); og.gain.exponentialRampToValueAtTime(.0001, t + 1);
+    o.connect(og).connect(ac.destination); o.start(t); o.stop(t + 1.05);
+  } catch {}
+}
+// Promemoria: due tic secchi e brevissimi, diversi da tutto il resto.
+function tic(freq, delay) {
+  if (!ac || !S.sound) return;
+  try {
+    const t = ac.currentTime + delay, o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'triangle'; o.frequency.value = freq;
+    g.gain.setValueAtTime(.22, t); g.gain.exponentialRampToValueAtTime(.0001, t + .035);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + .04);
+  } catch {}
+}
 const SND = {
-  go()   { bell(784, .22, .32); bell(1175, .45, .34, .1); buzz(70); },          // spingi: due note che salgono
-  rest() { bell(659, .5, .26); bell(440, .8, .24, .16); buzz([25, 40, 25]); },   // riposa: due note che scendono, morbide
+  go()   { strain(); buzz(80); },                 // spingi: fatica
+  rest() { exhale(); buzz([20, 50, 20]); },       // rilassa: respiro che esce
   next() { bell(523, .35, .26); bell(659, .35, .26, .13); bell(784, .7, .28, .26); buzz([40, 60, 40]); }, // esercizio finito
   tick() { bell(988, .09, .14); },
-  remind() { bell(1047, .5, .13); bell(1397, .7, .11, .12); buzz(30); },          // promemoria: due note leggere in alto                                                 // conto alla rovescia
+  remind() { tic(2200, 0); tic(2900, .07); buzz(15); },          // promemoria: due note leggere in alto                                                 // conto alla rovescia
   flip() { bell(880, .2, .28); bell(880, .3, .28, .18); buzz(50); },              // cambia senso
   done() { [523, 659, 784, 1047].forEach((n, k) => bell(n, k === 3 ? 1.2 : .4, .28, k * .14)); buzz([60, 60, 60, 60, 140]); },
 };
@@ -730,11 +766,9 @@ const sw = v => `<span class="swap" data-swap><span>${v}</span></span>`;
 function swapText(sel, v) {
   stage.querySelectorAll(sel).forEach(el => {
     const box = el.querySelector('[data-swap]') || el;
-    const cur = [...box.children].find(n => !n.classList.contains('sw-out'));
+    const cur = box.firstElementChild;
     if (cur && cur.textContent === String(v)) return;
-    if (REDUCE || !cur) { box.innerHTML = `<span>${v}</span>`; return; }
-    cur.className = 'sw-out'; setTimeout(() => cur.remove(), 620);
-    const n = document.createElement('span'); n.className = 'sw-in'; n.textContent = v; box.appendChild(n);
+    box.innerHTML = REDUCE ? `<span>${v}</span>` : `<span class="sw-in">${v}</span>`;
   });
 }
 function streak() {
@@ -795,7 +829,7 @@ function readyView(st) {
   return `<div class="screen ready enter">
     <div class="top">${top}</div>
     <div class="mid"><div class="eyebrow">${eyebrow}</div><h2>${iso ? st.ex.name : st.p.name}</h2>${figSvg(S.fig)}<p class="cue">${iso ? st.ex.cue : st.p.cue}</p>${iso ? `<p class="posture">${POSTURE}</p>` : ''}</div>
-    <div class="bot"><div class="tapto">Tocca per<br>partire</div><div class="count"><span class="num" data-num>${sw(CFG.ready)}</span><span class="sub">sec</span></div></div>
+    <div class="bot"><div class="tapto">Si parte<br>tra</div><div class="count"><span class="num" data-num>${sw(CFG.ready)}</span><span class="sub">sec</span></div></div>
   </div>`;
 }
 function workView(st) {
@@ -862,7 +896,7 @@ function finish() {
     store.del('spalla.progress');
   }
   S.screen = 'done'; S.doneAt = performance.now();
-  stage.dataset.tone = 'push';
+  stage.dataset.tone = 'done';
   render(doneView(), true);
   SND.done();
 }
@@ -876,11 +910,11 @@ function advance() {
   S.slosh = 1;
   if (S.phase === 'push') {
     if (S.rep >= CFG.reps) return nextStep(end);
-    S.phase = 'rest'; S.t0 = end; S.dur = CFG.rest;
+    S.phase = 'rest'; S.t0 = end; S.dur = CFG.rest; stage.dataset.tone = 'rest';
     swapText('[data-phase]', 'Riposa');
     SND.rest();
   } else {
-    S.rep++; S.phase = 'push'; S.t0 = end; S.dur = CFG.push;
+    S.rep++; S.phase = 'push'; S.t0 = end; S.dur = CFG.push; stage.dataset.tone = 'push';
     swapText('[data-phase]', S.rep === CFG.reps ? 'Ultima' : 'Spingi'); setHTML('[data-reps]', repDots());
     SND.go();
   }
@@ -933,7 +967,7 @@ function remindFrame(dt, t) {
   }
   if (spr.to === 0 && spr.x < .02 && Math.abs(spr.v) < .2) { hideRemind(true); return; }
   const x = spr.x, out = spr.to === 0;
-  remindCard.style.transform = `translateY(${f((1 - x) * (out ? -18 : 46))}px) scale(${((out ? .9 : .7) + (out ? .1 : .3) * x).toFixed(4)})`;
+  remindCard.style.transform = `translateY(${f((1 - x) * -14)}px) scale(${(.9 + .1 * x).toFixed(4)})`;
   remindCard.style.opacity = clamp(x * 1.5);
   remindDraw(t);
 }
@@ -966,7 +1000,6 @@ function resume() {
 /* ================= Tocchi ================= */
 document.addEventListener('click', e => {
   if (e.target.closest('.hap')) return;
-  if (lpFired) { lpFired = false; return; }
   unlockAudio(); keepAwakeFromTap();
   if (e.isTrusted && (e.target.closest('button') || S.screen === 'ready' || S.screen === 'work')) haptic();
   const b = e.target.closest('[data-act]');
@@ -988,15 +1021,8 @@ document.addEventListener('click', e => {
     quitBtn.dataset.armed = '1'; quitBtn.textContent = 'Tocca ancora per uscire'; return;
   }
   if (e.target.closest('#sheet')) { if (e.target === sheet) resume(); return; }
-  if (S.screen === 'ready') { keepAwake(); beginWork(now); }
-  else if (S.screen === 'work') pause();
+  if (S.screen === 'ready' || S.screen === 'work') pause();
 });
-let lpTimer = 0, lpFired = false;
-stage.addEventListener('pointerdown', () => {
-  lpFired = false; clearTimeout(lpTimer);
-  if (S.screen === 'ready' && !S.paused) lpTimer = setTimeout(() => { lpFired = true; haptic(); pause(); }, 550);
-});
-['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => stage.addEventListener(ev, () => clearTimeout(lpTimer)));
 document.addEventListener('keydown', e => {
   if (e.key === ' ' || e.key === 'Enter') { if (!e.target.closest('button')) { e.preventDefault(); stage.click(); } }
   if (e.key === 'Escape') { if (!detailEl.hidden) return closeDetail(); S.paused ? resume() : pause(); }
