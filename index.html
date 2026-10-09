@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Spalla">
+<meta name="theme-color" content="#0e1013">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Spalla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: one full-screen stage. A liquid fill rises from the bottom as the timer;
+   every screen is drawn twice (base + fill layer) and the fill layer is clipped,
+   so text and figures invert cleanly where the liquid passes. */
+:root{
+  --bg:#0e1013;        /* near-black, faint blue bias */
+  --ink:#f3efe8;       /* warm white */
+  --muted:#8b9099;
+  --line:#23272e;
+  --panel:#171a1f;
+  --orange:#ff6a1a;    /* international orange: effort */
+  --ready:#272c34;     /* graphite: waiting */
+  --blue:#86b4ff;      /* pendulum: relaxed movement */
+  --dark:#15110c;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:var(--body);overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;overscroll-behavior:none;touch-action:manipulation;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+
+#stage{position:fixed;inset:0;cursor:pointer;overflow:hidden}
+.layer{position:absolute;inset:0;overflow:hidden}
+.layer.base{background:var(--bg);color:var(--ink);--gapc:var(--bg);--acc:var(--orange)}
+.layer.fill{background:var(--tone);color:var(--tink);--gapc:var(--tone);--acc:var(--tacc);clip-path:inset(100% 0 0 0);will-change:clip-path;transition:background-color .5s,color .5s}
+#stage[data-tone="ready"]{--tone:var(--ready);--tink:var(--ink);--tacc:var(--orange)}
+#stage[data-tone="push"]{--tone:var(--orange);--tink:var(--dark);--tacc:var(--dark)}
+#stage[data-tone="pend"]{--tone:var(--blue);--tink:var(--dark);--tacc:var(--dark)}
+#stage[data-tone="pend"] .base{--acc:var(--blue)}
+
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;box-sizing:border-box;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) 22px calc(env(safe-area-inset-bottom,0px) + 22px)}
+.enter > *, .enter .mid > *, .enter .center > *{animation:enter .6s cubic-bezier(.2,.8,.2,1) both}
+.enter > :nth-child(2), .enter .mid > :nth-child(2), .enter .center > :nth-child(2){animation-delay:.05s}
+.enter > :nth-child(3), .enter .mid > :nth-child(3), .enter .center > :nth-child(3){animation-delay:.1s}
+.enter > :nth-child(4), .enter .mid > :nth-child(4){animation-delay:.15s}
+.enter > :nth-child(n+5), .enter .mid > :nth-child(n+5){animation-delay:.2s}
+.enter > .mid, .enter > .center{animation:none}
+@keyframes enter{from{opacity:0;transform:translateY(14px);filter:blur(6px)}}
+
+/* vetro: tinta presa dal colore del testo, cosi funziona sia sul nero che sul liquido */
+.glass{background:color-mix(in srgb,currentColor 8%,transparent);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,currentColor 11%,transparent),inset 0 1px 0 color-mix(in srgb,currentColor 20%,transparent);
+  -webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+
+/* anello di avanzamento: 3 giri + pendolo */
+.ring{display:block;flex-shrink:0;overflow:visible}
+.ring circle{fill:none;stroke-width:5;stroke-linecap:round}
+.ring .rt{stroke:currentColor;opacity:.16}
+.ring .rp{stroke:var(--acc);transition:opacity .3s}
+.ring .rp.pd{stroke:var(--pd)}
+.layer.base{--pd:var(--blue)}
+.layer.fill{--pd:var(--tacc)}
+.pill{display:flex;align-items:center;gap:10px;padding:5px 16px 5px 5px;border-radius:999px;min-width:0}
+.pill .rw{position:relative;width:46px;height:46px;flex-shrink:0}
+.pill .rw .ring{width:100%;height:100%}
+.pill .rw b{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:0;font-variant-numeric:tabular-nums}
+.pill .pt{display:flex;flex-direction:column;gap:2px;line-height:1.05;min-width:0}
+.pill strong{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.06em;white-space:nowrap}
+.pill small{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.12em;opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* numeri che scorrono, come il timer di iOS */
+.swap{display:inline-grid}
+.swap > span{grid-area:1/1}
+.sw-in{animation:swIn .75s cubic-bezier(.22,.61,.36,1) both}
+.sw-out{animation:swOut .6s cubic-bezier(.4,0,.6,1) both}
+@keyframes swIn{from{opacity:0;transform:translateY(.08em) scale(.97);filter:blur(10px)}}
+@keyframes swOut{to{opacity:0;transform:translateY(-.06em) scale(1.03);filter:blur(10px)}}
+.sub{opacity:.6}
+.eyebrow{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;opacity:.6}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.1em;text-transform:uppercase;min-height:44px}
+.icon{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;transition:transform .15s}
+.icon:active{transform:scale(.9)}
+.icon svg{width:18px;height:18px;opacity:.85}
+.num{font-family:var(--display);font-weight:600;font-variant-numeric:tabular-nums;line-height:.8;letter-spacing:-.02em}
+.segs{display:flex;gap:4px;margin-top:6px}
+.segs i{flex:1;height:4px;border-radius:2px;background:currentColor;opacity:.18}
+.segs i.on{opacity:.7}
+.segs i.cur{opacity:1}
+
+/* ---- home ---- */
+.home{overflow-y:auto;gap:20px;cursor:default;-webkit-overflow-scrolling:touch}
+.home header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.home h1{font-family:var(--display);font-weight:700;font-size:clamp(76px,24vw,124px);line-height:.84;margin:8px 0 0;letter-spacing:-.01em;text-transform:uppercase}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips span{border:1.5px solid var(--orange);color:var(--orange);border-radius:999px;padding:6px 12px;font-weight:600;font-size:14px}
+.week{display:flex;gap:6px;align-items:center}
+.week .d{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;max-width:38px}
+.week .d i{width:100%;aspect-ratio:1;max-width:30px;border-radius:50%;border:1.5px solid var(--line);box-sizing:border-box}
+.week .d.on i{background:var(--orange);border-color:var(--orange)}
+.week .d.today i{border-color:var(--muted)}
+.week .d.on.today i{border-color:var(--orange)}
+.week .d span{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.week .d.today span{color:var(--ink)}
+.plan{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.plan li{display:grid;grid-template-columns:26px 1fr auto;align-items:baseline;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);font-size:17px;font-weight:500}
+.plan li:first-child{border-top:1px solid var(--line)}
+.plan .n{font-family:var(--display);font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.plan .t{font-family:var(--display);font-size:16px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.plan li.pend .n{color:var(--blue)}
+.foot{display:flex;justify-content:space-between;gap:6px 12px;color:var(--muted);font-size:15px;flex-wrap:wrap}
+.foot b{color:var(--ink);font-weight:600}
+.actions{margin-top:auto;display:flex;flex-direction:column;gap:10px;flex-shrink:0;padding-top:4px}
+.go{display:block;width:100%;min-height:64px;border-radius:20px;background:var(--orange);color:var(--dark);font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.1em;text-transform:uppercase;flex-shrink:0;transition:transform .15s}
+.go:active,.ghost:active{transform:scale(.97)}
+.ghost{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:64px;border-radius:20px;background:var(--panel);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),inset 0 1px 0 rgba(255,255,255,.08);padding:0 18px 0 10px;box-sizing:border-box;font-weight:600;font-size:16px;transition:transform .15s;text-align:left;gap:10px}
+.ghost small{display:block;font-weight:500;color:var(--muted);font-size:14px}
+.ghost .gl{display:flex;align-items:center;gap:12px;min-width:0}
+.ghost .ring{width:44px;height:44px}
+.toggle{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:600;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);min-height:44px;padding:0 2px}
+.toggle svg{width:20px;height:20px}
+.toggle.on{color:var(--ink)}
+
+/* ---- home v2 ---- */
+.home{gap:14px;padding-bottom:0}
+.h-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.h-top .eyebrow{text-transform:uppercase}
+.home .h-top h1{font-size:clamp(52px,15vw,72px);margin-top:6px}
+.icon.off{opacity:.55}
+.h-hero{position:relative;isolation:isolate;width:min(50vw,24vh,220px);aspect-ratio:1;align-self:center;margin-top:6px;flex-shrink:0}
+.h-hero::before{content:"";position:absolute;inset:-22%;z-index:-1;border-radius:50%;background:radial-gradient(closest-side,rgba(255,106,26,.26),rgba(255,106,26,.08) 55%,transparent);animation:glow 6s ease-in-out infinite}
+@keyframes glow{50%{transform:scale(1.08);opacity:.7}}
+.h-hero .ring{width:100%;height:100%}
+.h-hero .ring circle{stroke-width:2.8}
+.h-hero .ring .rt{opacity:.13}
+.h-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.h-center b{font-family:var(--display);font-weight:600;font-size:clamp(76px,23vw,104px);line-height:.8;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.h-center span{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:10px}
+.h-center .ok{width:64px;height:64px;color:var(--orange);display:block}
+.h-meta{text-align:center;color:var(--muted);font-size:15px;margin-top:-4px}
+.h-meta b{color:var(--ink);font-weight:600}
+.home .week{align-self:center;width:100%;max-width:300px;justify-content:space-between}
+.home .week .d i{max-width:12px;border-width:1.5px}
+.home .week .d.on i{box-shadow:0 0 12px rgba(255,106,26,.55)}
+.h-plan{display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.h-sec{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.h-sec span:first-child{color:var(--ink);font-size:15px}
+.h-sec span:last-child{color:var(--muted);text-align:right}
+.h-plan{flex:1 1 auto;min-height:0}
+.h-grid{flex:1 1 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(84px,1fr);gap:10px;min-height:0}
+.pc{cursor:pointer;transition:transform .2s cubic-bezier(.3,1.4,.4,1);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px 6px 12px;border-radius:22px;background:var(--panel);--gapc:var(--panel);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.06);min-width:0;min-height:0}
+.pc:active{transform:scale(.95)}
+.pc .fig{flex:1 1 auto;width:100%;height:auto;min-height:0;max-height:150px;margin:0;transform:scale(1.3);transform-origin:50% 92%}
+.pc .fig text{display:none}
+.pc b{font-family:var(--display);font-weight:700;font-size:15px;line-height:1;text-transform:uppercase;letter-spacing:.03em;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.pc .pn{position:absolute;top:9px;left:12px;font-family:var(--display);font-weight:700;font-size:14px;color:var(--muted)}
+.pc.pd{grid-column:1/-1;flex-direction:row;gap:16px;--acc:var(--blue)}
+.pc.pd .fig{flex:0 1 auto;width:auto;height:100%;max-height:120px;aspect-ratio:1}
+.pc.pd b{font-size:18px}
+.pc.pd .pn{color:var(--blue)}
+.home .actions{position:sticky;bottom:0;margin:auto -22px 0;padding:22px 22px calc(env(safe-area-inset-bottom,0px) + 22px);background:linear-gradient(to bottom,transparent,var(--bg) 38%);gap:4px;align-items:center}
+.home .go{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:12px}
+.home .go svg{width:24px;height:24px;flex-shrink:0}
+.home .go small{font-family:var(--body);font-weight:600;font-size:14px;letter-spacing:0;text-transform:none;opacity:.7}
+.home .go::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.4) 50%,transparent 65%);transform:translateX(-120%);animation:shine 5s ease-in-out 1.4s infinite}
+@keyframes shine{0%{transform:translateX(-120%)}28%,100%{transform:translateX(120%)}}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.two .go{flex-direction:column;gap:3px;min-height:70px;font-size:24px}
+.go.alt{background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 1px 0 rgba(255,255,255,.08)}
+.home .go.alt::after{display:none}
+.linkbtn{min-height:44px;padding:0 12px;color:var(--muted);font-weight:600;font-size:15px}
+
+/* ---- ready ---- */
+.ready .mid{flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;min-height:0}
+.ready h2{font-family:var(--display);font-weight:700;font-size:clamp(40px,12vw,62px);line-height:.92;margin:0;text-transform:uppercase;text-wrap:balance}
+.ready .fig{width:min(88vw,360px);height:auto;max-height:40vh;align-self:center;margin:2px 0}
+.cue{font-size:18px;line-height:1.35;margin:0;max-width:32ch;text-wrap:pretty}
+.posture{font-size:15px;font-weight:600;margin:0;opacity:.6}
+.bot{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.tapto{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.06em;text-transform:uppercase;line-height:1;animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.55}}
+.count{display:flex;align-items:baseline;gap:4px}
+.count .num{font-size:58px}
+
+/* ---- work ---- */
+.work .center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:0}
+.phase{font-family:var(--display);font-weight:700;font-size:30px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:8px;padding-left:.22em;text-align:center}
+.work .num.big{font-size:clamp(120px,min(46vw,26vh),280px)}
+.reps{display:flex;gap:7px;margin-top:20px}
+.reps i{width:9px;height:9px;border-radius:50%;border:1.5px solid currentColor;opacity:.4;box-sizing:border-box;transition:all .3s}
+.reps i.on{background:currentColor;opacity:.7}
+.reps i.cur{background:currentColor;opacity:1;transform:scale(1.3)}
+.work .fig{width:min(70vw,280px);height:auto;max-height:30vh;align-self:center;margin-bottom:10px}
+.work .bot{font-size:15px;font-weight:600}
+.work .exname{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;opacity:.6;margin-bottom:14px;text-align:center}
+
+/* ---- done ---- */
+.done{justify-content:center;gap:14px;cursor:default}
+.done .ring{width:min(46vw,200px);height:auto;aspect-ratio:1;max-width:100%;margin-bottom:10px}
+.done .ring circle{stroke-width:4.2}
+.done .check{fill:none;stroke:var(--acc);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:30;stroke-dashoffset:30;animation:check .5s cubic-bezier(.3,.7,.2,1) 1.6s forwards}
+@keyframes check{to{stroke-dashoffset:0}}
+.streak{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;opacity:.75}
+.done h1{font-family:var(--display);font-weight:700;font-size:clamp(96px,30vw,160px);line-height:.84;margin:0;text-transform:uppercase}
+.done p{font-size:19px;margin:0}
+.done .week{margin:18px 0 6px;max-width:320px}
+.done .week .d i{border-color:currentColor;opacity:.5}
+.done .week .d.on i{background:currentColor;border-color:currentColor;opacity:1}
+.done .week .d span{color:currentColor;opacity:.7}
+.done .go{margin-top:24px;background:var(--dark);color:var(--orange)}
+
+/* ---- figures ---- */
+.fig{display:block;overflow:visible;flex-shrink:0}
+.fig path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.fig .bd{opacity:.42}
+.fig .bd path{stroke:currentColor}
+.fig .bd circle{fill:currentColor}
+.fig path.gap{stroke:var(--gapc)}
+.fig circle.gap{fill:var(--gapc)}
+.fig path.ac{stroke:var(--acc)}
+.fig circle.ac{fill:var(--acc)}
+.fig .wfill{fill:currentColor;opacity:.06}
+.fig .wh{stroke:currentColor;stroke-width:1.3;opacity:.3}
+.fig .wl{stroke:currentColor;stroke-width:3;opacity:.8}
+.fig .tbl{fill:currentColor;opacity:.5}
+.fig .floor{stroke:currentColor;stroke-width:2;opacity:.16}
+.fig .guide{stroke:var(--acc);stroke-width:2;stroke-dasharray:1 7;opacity:.6;fill:none}
+.fig .ring{fill:none;stroke:var(--acc);stroke-width:2.5}
+.fig .glow{fill:var(--acc)}
+.fig text{fill:currentColor;font-family:var(--display);font-weight:600;font-size:11px;letter-spacing:.16em;opacity:.45}
+
+/* ---- promemoria postura (popup a molla, mosso da JS) ---- */
+#remind{position:fixed;inset:0;z-index:4;display:grid;place-items:center;pointer-events:none;padding:0 22px;--gapc:#1c1f25;--acc:var(--orange)}
+#remind .card{width:min(100%,340px);box-sizing:border-box;padding:18px 16px 20px;border-radius:34px;color:var(--ink);
+  background:rgba(22,24,29,.62);-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 0 0 1px rgba(255,255,255,.08),0 30px 80px rgba(0,0,0,.45);
+  display:flex;flex-direction:column;align-items:center;gap:6px;will-change:transform,opacity;transform-origin:50% 60%}
+#remind .eyebrow{color:var(--orange);opacity:1}
+#remind .cols{display:grid;grid-template-columns:1fr 1px 1fr;align-items:start;width:100%}
+#remind .sep{align-self:stretch;background:rgba(255,255,255,.1);margin:14px 0}
+#remind .col{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+#remind .col .fig{width:110px;height:110px}
+#remind .col b{font-family:var(--display);font-weight:700;font-size:24px;line-height:.95;text-transform:uppercase;letter-spacing:.01em}
+
+/* ---- come si fa (pannello dalla Home) ---- */
+#detail{position:fixed;inset:0;z-index:6;background:rgba(8,9,11,.45);display:flex;align-items:flex-end;animation:fade .25s ease-out}
+#detail .panel{position:relative;width:100%;box-sizing:border-box;padding:22px 22px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;gap:10px;color:var(--ink);
+  background:rgba(26,29,35,.72);-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 -10px 40px rgba(0,0,0,.4);border-radius:34px 34px 0 0;animation:up .5s cubic-bezier(.2,.9,.25,1);
+  --gapc:#1d2026;--acc:var(--orange);max-height:92%;overflow-y:auto}
+#detail.pd .panel{--acc:var(--blue)}
+#detail.closing{animation:fadeOut .25s ease-in forwards}
+#detail.closing .panel{animation:down .28s cubic-bezier(.4,0,1,1) forwards}
+@keyframes fadeOut{to{opacity:0}}
+@keyframes down{to{transform:translateY(100%)}}
+#detail .grab{width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,.18);align-self:center;margin:-8px 0 0}
+.dclose{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.dclose svg{width:16px;height:16px;opacity:.8}
+.dfig{align-self:center;width:min(70vw,34vh,280px);aspect-ratio:1;margin:4px 0 2px}
+.dfig .fig{width:100%;height:100%}
+#detail .eyebrow{color:var(--acc);opacity:1}
+#detail h3{font-family:var(--display);font-weight:700;font-size:clamp(34px,10vw,46px);line-height:.92;margin:0;text-transform:uppercase;text-wrap:balance}
+.dcue{font-size:17px;line-height:1.38;margin:0;opacity:.88;text-wrap:pretty}
+.dcue small{display:block;margin-top:6px;font-size:14px;font-weight:600;opacity:.7}
+.dspec{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0}
+.dspec span{font-family:var(--display);font-weight:600;font-size:14px;letter-spacing:.08em;text-transform:uppercase;padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.dsets{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 4px}
+.dsets > span{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.seg{display:grid;grid-template-columns:repeat(3,52px);padding:4px;border-radius:999px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);position:relative}
+.seg button{position:relative;z-index:1;height:38px;border-radius:999px;font-family:var(--display);font-weight:700;font-size:18px;color:var(--muted);transition:color .25s}
+.seg button[aria-checked="true"]{color:var(--dark)}
+.seg::before{content:"";position:absolute;top:4px;left:4px;width:52px;height:38px;border-radius:999px;background:var(--orange);transform:translateX(calc(var(--si,0) * 52px));transition:transform .45s cubic-bezier(.3,1.3,.4,1)}
+#detail .go{margin-top:4px;display:flex;align-items:center;justify-content:center;gap:10px}
+#detail .go svg{width:22px;height:22px}
+#detail.pd .go{background:var(--blue)}
+
+/* ---- pause sheet ---- */
+#sheet{position:fixed;inset:0;z-index:5;background:rgba(8,9,11,.35);display:flex;align-items:flex-end;animation:fade .2s ease-out}
+#sheet .panel{width:100%;box-sizing:border-box;padding:22px 22px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;gap:12px;background:rgba(26,29,35,.62);-webkit-backdrop-filter:blur(28px) saturate(1.8);backdrop-filter:blur(28px) saturate(1.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 -10px 40px rgba(0,0,0,.35);border-radius:32px 32px 0 0;animation:up .45s cubic-bezier(.2,.9,.25,1)}
+#sheet .head{display:flex;align-items:center;gap:14px;margin-bottom:2px}
+#sheet .head .ring{width:56px;height:56px;color:var(--ink);--acc:var(--orange);--pd:var(--blue)}
+#sheet .head b{display:block;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+#sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--line);align-self:center;margin:-8px 0 6px}
+#sheet h3{font-family:var(--display);font-weight:700;font-size:44px;line-height:.9;margin:0;text-transform:uppercase}
+#sheet .info{color:var(--ink);font-size:16px;margin:0 0 6px;opacity:.8}
+#sheet .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#sheet .row button{min-height:54px;border-radius:16px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);font-weight:600;font-size:16px;transition:transform .15s}
+#sheet .row button:active{transform:scale(.97)}
+#sheet .row button:disabled{opacity:.35}
+#sheet .low{display:flex;justify-content:space-between;align-items:center;margin-top:2px}
+#sheet .quit{color:#ff8a5c;font-weight:600;font-size:16px;min-height:44px;padding:0 4px}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(40%)}}
+
+@media (max-height:600px){
+  .ready .fig{max-height:28vh}.ready h2{font-size:38px}.cue{font-size:16px}
+  .work .fig{max-height:20vh}.reps{margin-top:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  .h-hero::before,.home .go::after,
+  .enter > *,.enter .mid > *,.enter .center > *,.tapto,.sw-in,.sw-out{animation:none}
+}
+</style>
+
+</head>
+<body>
+<div id="stage" data-tone="ready" role="application" aria-label="Spalla">
+  <div class="layer base"></div>
+  <div class="layer fill" hidden></div>
+</div>
+<div id="remind" hidden aria-live="polite">
+  <div class="card">
+    <div class="eyebrow">Ricorda</div>
+    <div class="cols">
+      <div class="col"><svg class="fig" viewBox="0 0 80 80" aria-hidden="true"><g id="rmA"></g></svg><b>Ascella<br>attaccata</b></div>
+      <div class="sep"></div>
+      <div class="col"><svg class="fig" viewBox="0 0 80 80" aria-hidden="true"><g id="rmB"></g></svg><b>Petto<br>in fuori</b></div>
+    </div>
+  </div>
+</div>
+<div id="detail" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+    <div class="grab"></div>
+    <button class="dclose" data-act="closeDetail" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="dfig" id="dFig"></div>
+    <div class="eyebrow" id="dEyebrow"></div>
+    <h3 id="dTitle"></h3>
+    <p class="dcue" id="dCue"></p>
+    <div class="dspec" id="dSpec"></div>
+    <button class="go" data-act="runOne" id="dRun"></button>
+  </div>
+</div>
+<div id="sheet" hidden>
+  <div class="panel">
+    <div class="grab"></div>
+    <div class="head"><span id="sheetRing"></span><div><b id="sheetPct"></b><h3>In pausa</h3></div></div>
+    <p class="info" id="sheetInfo"></p>
+    <button class="go" data-act="resume">Riprendi</button>
+    <div class="row">
+      <button data-act="prev" id="prevBtn">← Precedente</button>
+      <button data-act="skip">Salta →</button>
+    </div>
+    <div class="low">
+      <button class="icon glass" data-act="sound" data-sound-icon aria-label="Suono"></button>
+      <button class="quit" data-act="quit" id="quitBtn">Termina</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+/* ================= Impostazioni ================= */
+const CFG = { push: 5, rest: 5, reps: 10, rounds: 3, ready: 10, pend: 30 };
+const POSTURE = 'Ascella attaccata · petto in fuori';
+
+/* ================= Geometria ================= */
+const D = Math.PI / 180;
+const f = n => Math.round(n * 10) / 10;
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const pol = (o, l, deg) => [o[0] + l * Math.sin(deg * D), o[1] + l * Math.cos(deg * D)]; // 0° = giù, + = verso destra
+const add = (a, v, k = 1) => [a[0] + v[0] * k, a[1] + v[1] * k];
+const pt = p => `${f(p[0])} ${f(p[1])}`;
+const line = (pts, w, cls = '') => `<path${cls ? ` class="${cls}"` : ''} stroke-width="${w}" d="M${pts.map(pt).join('L')}"/>`;
+const dot = (p, r, cls = '', extra = '') => `<circle${cls ? ` class="${cls}"` : ''} cx="${f(p[0])}" cy="${f(p[1])}" r="${f(r)}"${extra}/>`;
+
+// Arto evidenziato: contorno del colore di fondo + tratto colorato, così si stacca dal corpo.
+function limb(pts, w, fist, fr) {
+  let s = line(pts, w + 6, 'gap') + (fist ? dot(fist, fr + 3, 'gap') : '');
+  return s + line(pts, w, 'ac') + (fist ? dot(fist, fr, 'ac') : '');
+}
+function arrowPath(a, b, op) {
+  const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), h = 8;
+  const p1 = [b[0] - h * Math.cos(ang - .6), b[1] - h * Math.sin(ang - .6)];
+  const p2 = [b[0] - h * Math.cos(ang + .6), b[1] - h * Math.sin(ang + .6)];
+  const d = `M${pt(a)}L${pt(b)}M${pt(p1)}L${pt(b)}L${pt(p2)}`;
+  return `<g opacity="${f(op * 100) / 100}"><path class="gap" stroke-width="9" d="${d}"/><path class="ac" stroke-width="3.5" d="${d}"/></g>`;
+}
+function rings(p, t, eff) {
+  if (eff < .03) return '';
+  let s = '';
+  for (let k = 0; k < 2; k++) {
+    const ph = (t * 1.25 + k * .5) % 1;
+    s += dot(p, 4 + 16 * ph, 'ring', ` opacity="${f(eff * (1 - ph) * 90) / 100}"`);
+  }
+  return s;
+}
+function wallV(x, y1, y2, side) {
+  const w = 18, x0 = side > 0 ? x : x - w;
+  let d = '';
+  for (let y = y1 + 10; y <= y2; y += 9) d += `M${x} ${y}l${side * 11} -9`;
+  return `<rect class="wfill" x="${x0}" y="${y1}" width="${w}" height="${y2 - y1}"/><path class="wh" d="${d}"/><path class="wl" d="M${x} ${y1}V${y2}"/>`;
+}
+const label = s => `<text x="2" y="10">${s}</text>`;
+const floorLine = '<path class="floor" d="M14 193H186"/>';
+
+/* ---- corpi (parte ferma del disegno) ---- */
+const SIDE_BODY = `<g class="bd">
+  ${line([[88, 124], [91, 158], [93, 189], [103, 190]], 15)}
+  ${line([[88, 124], [84, 158], [82, 189], [92, 190]], 15)}
+  <path stroke-width="23" d="M88 122Q101 96 90 72"/>
+  ${dot([95, 46], 13)}
+</g>`;
+const FRONT_BODY = `<g class="bd">
+  ${line([[90, 126], [88, 160], [87, 189], [81, 190]], 15)}
+  ${line([[102, 126], [104, 160], [105, 189], [111, 190]], 15)}
+  ${line([[96, 82], [96, 122]], 30)}
+  ${line([[79, 74], [113, 74]], 16)}
+  ${dot([96, 48], 13)}
+  ${line([[78, 76], [74, 104], [73, 128]], 11)}
+</g>`;
+const TOP_BODY = `<g class="bd">
+  ${line([[70, 118], [122, 118]], 22)}
+  ${dot([96, 115], 13)}
+  ${dot([96, 99], 3.5)}
+  ${dot([64, 122], 6.5)}
+</g>`;
+
+/* ---- disegni degli isometrici ----
+   b = arrivo in posizione (0→1), eff = forza (0→1), t = secondi */
+function tremor(t, eff) { return eff > .4 && !REDUCE ? Math.sin(t * 52) * .45 * eff : 0; }
+
+function sideIso(o) {
+  const S = [90, 72];
+  return {
+    lab: 'DI LATO', mirror: true,
+    still: floorLine + o.scene + SIDE_BODY,
+    draw(t, b, eff) {
+      const push = eff * 1.5 + tremor(t, eff);
+      const v = [o.dir[0] * push, o.dir[1] * push];
+      const E = add(pol(S, 31, o.th1), v);
+      const a2 = lerp(8, 90, ease(b));
+      const H = add(pol(pol(S, 31, o.th1), 30, a2), v);
+      const F = add(pol(pol(S, 31, o.th1), 33, a2), v);
+      return dot(S, 11 + 3 * eff, 'glow', ` opacity="${f(eff * 35) / 100}"`)
+        + limb([S, E, H], 12, F, 7)
+        + rings(o.hit, t, eff * b)
+        + arrowPath(add(o.arrow[0], o.dir, eff * 3), add(o.arrow[1], o.dir, eff * 3), (.22 + .78 * eff) * ease(b));
+    }
+  };
+}
+function frontIso(o) {
+  const S = [114, 76];
+  return {
+    lab: 'DI FRONTE', mirror: false,
+    still: floorLine + o.scene + FRONT_BODY,
+    draw(t, b, eff) {
+      const push = eff * 1.5 + tremor(t, eff);
+      const v = [o.dir[0] * push, 0];
+      const E0 = pol(S, 30, 7), E = add(E0, v);
+      const bb = ease(b);
+      // avambraccio: da giù (penzola) a puntato verso chi guarda (accorciato in prospettiva)
+      const Hdown = pol(E0, 26, 3), Hfwd = [E0[0] - 1.5, E0[1] + 7];
+      const H = add([lerp(Hdown[0], Hfwd[0], bb), lerp(Hdown[1], Hfwd[1], bb)], v);
+      return dot(S, 11 + 3 * eff, 'glow', ` opacity="${f(eff * 35) / 100}"`)
+        + limb([S, E, H], 12, H, lerp(6.5, 8.5, bb))
+        + rings(o.hit, t, eff * b)
+        + arrowPath(add(o.arrow[0], o.dir, eff * 3), add(o.arrow[1], o.dir, eff * 3), (.22 + .78 * eff) * bb);
+    }
+  };
+}
+function topIso(o) {
+  const Sh = [122, 118], E0 = [129, 124];
+  return {
+    lab: 'DALL’ALTO', mirror: true, vb: [22, 22, 150, 150],
+    still: o.scene + TOP_BODY,
+    draw(t, b, eff) {
+      const push = eff * 1.5 + tremor(t, eff);
+      const v = [o.dir[0] * push, 0];
+      const bl = ease(clamp(b * 1.7)), br = ease(clamp((b - .45) / .55));
+      const L = lerp(5, 40, bl), ph = lerp(o.phi0, 0, br) * D;
+      const E = add(E0, v, .4);
+      const H = add([E0[0] + L * Math.sin(ph), E0[1] - L * Math.cos(ph)], v);
+      const F = add([E0[0] + (L + 4) * Math.sin(ph), E0[1] - (L + 4) * Math.cos(ph)], v);
+      return dot(Sh, 11 + 3 * eff, 'glow', ` opacity="${f(eff * 35) / 100}"`)
+        + limb([Sh, E, H], 12, F, lerp(6, 7.5, bl))
+        + rings(o.hit, t, eff * br)
+        + arrowPath(add(o.arrow[0], o.dir, eff * 3), add(o.arrow[1], o.dir, eff * 3), (.22 + .78 * eff) * br);
+    }
+  };
+}
+
+/* ---- disegni del pendolo ---- */
+const AMP = 24;
+function pendSide() {
+  const Sh = [120, 98], R = 66;
+  const g1 = pol(Sh, R, -AMP), g2 = pol(Sh, R, AMP);
+  return {
+    lab: 'DI LATO', mirror: true,
+    still: floorLine
+      + `<rect class="tbl" x="158" y="116" width="40" height="6" rx="2"/><rect class="tbl" x="188" y="122" width="5" height="70"/>`
+      + `<path class="guide" d="M${pt(g1)}A${R} ${R} 0 0 0 ${pt(g2)}"/>`
+      + `<g class="bd">${line([[64, 128], [66, 160], [64, 189], [74, 190]], 15)}${line([[64, 128], [58, 160], [54, 189], [64, 190]], 15)}<path stroke-width="23" d="M64 126Q84 96 122 96"/>${dot([139, 85], 13)}${line([[124, 97], [142, 108], [162, 114]], 11)}</g>`,
+    draw(t, b, eff, ang) {
+      const a1 = AMP * Math.sin(ang), a2 = AMP * 1.15 * Math.sin(ang - .45);
+      const E = pol(Sh, 32, a1), H = pol(E, 30, a2), F = pol(E, 33, a2);
+      return limb([Sh, E, H], 12, F, 7);
+    }
+  };
+}
+function pendFront(circ) {
+  const Sh = [116, 100], R = 64;
+  const g1 = pol(Sh, R, -AMP), g2 = pol(Sh, R, AMP);
+  const guide = circ
+    ? `<ellipse class="guide" cx="${Sh[0]}" cy="${Sh[1] + 59}" rx="${f(R * Math.sin(AMP * D))}" ry="8"/>`
+    : `<path class="guide" d="M${pt(g1)}A${R} ${R} 0 0 0 ${pt(g2)}"/>`;
+  return {
+    lab: 'DI FRONTE', mirror: false,
+    still: floorLine
+      + `<rect class="tbl" x="0" y="118" width="58" height="6" rx="2"/><rect class="tbl" x="8" y="124" width="5" height="68"/>`
+      + guide
+      + `<g class="bd">${line([[90, 132], [88, 162], [86, 189], [80, 190]], 15)}${line([[106, 132], [108, 162], [110, 189], [116, 190]], 15)}${line([[98, 106], [98, 128]], 30)}${line([[80, 100], [116, 100]], 16)}${dot([98, 84], 14)}${line([[80, 101], [66, 111], [52, 117]], 11)}</g>`,
+    draw(t, b, eff, ang) {
+      if (!circ) {
+        const a1 = AMP * Math.sin(ang), a2 = AMP * 1.15 * Math.sin(ang - .45);
+        const E = pol(Sh, 32, a1), H = pol(E, 30, a2), F = pol(E, 33, a2);
+        return limb([Sh, E, H], 12, F, 7);
+      }
+      // cerchio: x = oscillazione laterale, profondità = braccio che viene verso chi guarda (si accorcia e la mano si ingrandisce)
+      const pos = (L, a) => [Sh[0] + L * Math.sin(AMP * D * Math.sin(a)), Sh[1] + L * (1 - .07 * (1 + Math.cos(a)))];
+      const E = pos(32, ang - .2), F = pos(66, ang - .5), H = pos(62, ang - .5);
+      return limb([Sh, E, H], 12, F, 7 * (1 + .16 * Math.cos(ang - .5)));
+    }
+  };
+}
+
+/* ================= Esercizi ================= */
+const EX = [
+  { name: 'Pugno contro la parete', short: 'Pugno', cue: 'Muro davanti a te, gomito a 90°. Spingi il pugno in avanti.',
+    fig: () => sideIso({ th1: 0, dir: [1, 0], hit: [131, 103], arrow: [[137, 103], [160, 103]], scene: wallV(131, 24, 192, 1) }) },
+  { name: 'Gomito contro la parete', short: 'Gomito', cue: 'Schiena vicino al muro. Spingi il gomito indietro.',
+    fig: () => sideIso({ th1: -24, dir: [-1, 0], hit: [71, 100], arrow: [[64, 100], [41, 100]], scene: wallV(71, 24, 192, -1) }) },
+  { name: 'Spalla contro la parete', short: 'Spalla', cue: 'Fianco al muro, gomito a 90°. Ruota verso l’esterno e spingi contro il muro.',
+    fig: () => topIso({ phi0: -26, dir: [1, 0], hit: [137, 100], arrow: [[143, 100], [166, 100]], scene: wallV(137, 30, 150, 1) }) },
+  { name: 'Avambraccio contro la parete', short: 'Avambraccio', cue: 'Come per la spalla, ma il muro arriva solo a metà avambraccio: mano libera oltre lo spigolo. Ruota verso l’esterno.',
+    // come la spalla (vista dall'alto), ma il muro finisce a metà avambraccio: lo spigolo è a y=104
+    fig: () => topIso({ phi0: -26, dir: [1, 0], hit: [137, 113], arrow: [[143, 113], [166, 113]], scene: wallV(137, 104, 150, 1) }) },
+  { name: 'Palmo contro la parete', short: 'Palmo', cue: 'Palmo contro lo stipite, come per chiudere una porta. Spingi verso la pancia.',
+    fig: () => topIso({ phi0: 26, dir: [-1, 0], hit: [121, 80], arrow: [[115, 80], [92, 80]], scene: wallV(121, 34, 96, -1) }) },
+  { name: 'Pugno sul tavolo', short: 'Tavolo', cue: 'Gomito a 90°, pugno sul tavolo. Spingi verso il basso.',
+    fig: () => sideIso({ th1: 0, dir: [0, 1], hit: [123, 111], arrow: [[123, 64], [123, 89]],
+      scene: '<rect class="tbl" x="106" y="111" width="92" height="7" rx="2"/><rect class="tbl" x="114" y="118" width="5" height="74"/><rect class="tbl" x="188" y="118" width="5" height="74"/>' }) },
+];
+const PEND = [
+  { mode: 'fb', name: 'Avanti e indietro', cue: 'Altra mano sul tavolo, busto in avanti. Braccio morbido: lascialo oscillare avanti e indietro.', fig: pendSide },
+  { mode: 'lat', name: 'Laterale', cue: 'Ora da un lato all’altro. Movimento piccolo, spalla rilassata.', fig: () => pendFront(false) },
+  { mode: 'circ', name: 'Cerchietti', cue: 'Piccoli cerchi. A metà tempo cambia senso.', fig: () => pendFront(true) },
+];
+// st.seg = in quale arco dell'anello cade lo step
+function fullPlan() {
+  const out = [];
+  for (let r = 1; r <= CFG.rounds; r++) EX.forEach((ex, k) => out.push({ kind: 'iso', ex, round: r, k, seg: r - 1 }));
+  PEND.forEach((p, k) => out.push({ kind: 'pend', p, k, seg: CFG.rounds }));
+  return out;
+}
+function singlePlan(idx, sets) {
+  if (idx >= EX.length) return PEND.map((p, k) => ({ kind: 'pend', p, k, seg: 0 }));
+  const out = [];
+  for (let r = 1; r <= sets; r++) out.push({ kind: 'iso', ex: EX[idx], round: r, k: idx, seg: r - 1 });
+  return out;
+}
+let STEPS = fullPlan();
+
+/* ================= Stato ================= */
+const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stage = document.getElementById('stage');
+const base = stage.querySelector('.base'), fill = stage.querySelector('.fill');
+const sheet = document.getElementById('sheet'), quitBtn = document.getElementById('quitBtn');
+const remindEl = document.getElementById('remind');
+const S = { screen: 'home', i: 0, worked: 0, fromI: 0, phase: '', rep: 1, t0: 0, dur: 0, paused: false, left: 0, startedAt: 0,
+  lastNum: null, ang: 0, dir: 1, eff: 0, enteredAt: 0, slosh: 0, doneAt: 0, fig: null, sound: true };
+
+/* ---------- memoria locale (solo su questo telefono) ---------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+S.sound = store.get('spalla.sound', true);
+const readLog = () => store.get('spalla.log', []);
+function dayDiff(iso) { const a = new Date(iso), b = new Date(); a.setHours(0, 0, 0, 0); b.setHours(0, 0, 0, 0); return Math.round((b - a) / 864e5); }
+function lastText() {
+  const l = readLog(); if (!l.length) return 'prima sessione';
+  const d = dayDiff(l[l.length - 1]);
+  return 'ultima ' + (d === 0 ? 'oggi' : d === 1 ? 'ieri' : d + ' giorni fa');
+}
+function weekStrip() {
+  const days = new Set(readLog().map(dayDiff));
+  const L = ['D', 'L', 'M', 'M', 'G', 'V', 'S'];
+  let s = '';
+  for (let d = 6; d >= 0; d--) {
+    const dt = new Date(); dt.setDate(dt.getDate() - d);
+    s += `<div class="d${days.has(d) ? ' on' : ''}${d === 0 ? ' today' : ''}"><i></i><span>${L[dt.getDay()]}</span></div>`;
+  }
+  return `<div class="week" aria-label="Ultimi 7 giorni">${s}</div>`;
+}
+
+/* ---------- suono, vibrazione, schermo acceso ---------- */
+let ac = null;
+function unlockAudio() { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); } catch {} }
+// Nota a campanella: fondamentale + armonica leggera, attacco rapido e coda morbida.
+function bell(freq, dur = .4, vol = .3, delay = 0) {
+  if (!ac || !S.sound) return;
+  try {
+    const t = ac.currentTime + delay, g = ac.createGain();
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .008); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    g.connect(ac.destination);
+    [[1, 1], [2.01, .18], [3.02, .06]].forEach(([m, a]) => {
+      const o = ac.createOscillator(), h = ac.createGain();
+      o.type = 'sine'; o.frequency.value = freq * m; h.gain.value = a;
+      o.connect(h).connect(g); o.start(t); o.stop(t + dur + .05);
+    });
+  } catch {}
+}
+/* Vibrazione: Android usa navigator.vibrate; Safari su iPhone non lo supporta,
+   ma toccare uno switch nativo (iOS 18+) fa scattare il Taptic Engine. */
+const hap = document.createElement('label');
+hap.className = 'hap'; hap.setAttribute('aria-hidden', 'true');
+hap.style.cssText = 'position:fixed;left:-200px;top:0;width:1px;height:1px;opacity:0;pointer-events:none';
+hap.innerHTML = '<input type="checkbox" switch tabindex="-1">';
+document.body.appendChild(hap);
+function haptic() { try { if (navigator.vibrate) navigator.vibrate(12); else hap.click(); } catch {} }
+const buzz = p => { try { if (navigator.vibrate) navigator.vibrate(p); else hap.click(); } catch {} };
+const SND = {
+  go()   { bell(784, .22, .32); bell(1175, .45, .34, .1); buzz(70); },          // spingi: due note che salgono
+  rest() { bell(659, .5, .26); bell(440, .8, .24, .16); buzz([25, 40, 25]); },   // riposa: due note che scendono, morbide
+  next() { bell(523, .35, .26); bell(659, .35, .26, .13); bell(784, .7, .28, .26); buzz([40, 60, 40]); }, // esercizio finito
+  tick() { bell(988, .09, .14); },
+  remind() { bell(1047, .5, .13); bell(1397, .7, .11, .12); buzz(30); },          // promemoria: due note leggere in alto                                                 // conto alla rovescia
+  flip() { bell(880, .2, .28); bell(880, .3, .28, .18); buzz(50); },              // cambia senso
+  done() { [523, 659, 784, 1047].forEach((n, k) => bell(n, k === 3 ? 1.2 : .4, .28, k * .14)); buzz([60, 60, 60, 60, 140]); },
+};
+
+/* Schermo sempre acceso, tre protezioni insieme:
+   1. Wake Lock nativo (iPhone da iOS 18.4 anche dalla Home), richiesto all'avvio, a ogni tocco e ogni 10 s;
+   2. un video muto e invisibile in loop (stesso trucco di NoSleep.js, MIT) che tiene sveglio anche iOS più vecchi;
+   3. il video è incorporato qui, quindi funziona anche offline. */
+let lock = null;
+async function keepAwake() {
+  if (document.visibilityState !== 'visible') return;
+  try { if ('wakeLock' in navigator && !lock) { lock = await navigator.wakeLock.request('screen'); lock.addEventListener('release', () => lock = null); } } catch {}
+}
+const AWAKE_MP4 = 'data:video/mp4;base64,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';
+const awakeVid = document.createElement('video');
+awakeVid.setAttribute('playsinline', ''); awakeVid.setAttribute('muted', ''); awakeVid.setAttribute('aria-hidden', 'true');
+awakeVid.muted = true; awakeVid.loop = true; awakeVid.src = AWAKE_MP4;
+awakeVid.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none;z-index:-1';
+awakeVid.addEventListener('timeupdate', () => { if (awakeVid.currentTime > .5) awakeVid.currentTime = Math.random() * .4; });
+document.body.appendChild(awakeVid);
+function playAwake() { try { const pr = awakeVid.play(); pr && pr.catch(() => {}); } catch {} }
+function keepAwakeFromTap() { keepAwake(); if (awakeVid.paused) playAwake(); }
+setInterval(() => { keepAwake(); if (awakeVid.paused && document.visibilityState === 'visible') playAwake(); }, 10000);
+const SPK_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+const SPK_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9.5l5 5M22 9.5l-5 5"/></svg>';
+function paintSound() {
+  document.querySelectorAll('[data-sound-icon]').forEach(n => { n.innerHTML = S.sound ? SPK_ON : SPK_OFF; n.classList.toggle('off', !S.sound); n.setAttribute('aria-label', S.sound ? 'Suono attivo' : 'Suono spento'); });
+  document.querySelectorAll('[data-sound]').forEach(n => {
+    n.classList.toggle('on', S.sound);
+    n.innerHTML = (S.sound ? SPK_ON : SPK_OFF) + (S.sound ? 'Suono attivo' : 'Suono spento');
+  });
+}
+const MENU_ICON = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg>';
+
+/* ================= Schermate ================= */
+function render(html, withFill) {
+  lastPct = null;
+  base.innerHTML = html;
+  fill.innerHTML = withFill ? html : '';
+  fill.hidden = !withFill;
+  S.lastNum = null;
+  paintSound();
+}
+// Tutti i disegni mostrano il braccio SINISTRO: le viste di lato e dall'alto sono specchiate.
+const figSvg = fig => { const v = fig.vb || [0, 0, 200, 200]; return `<svg class="fig" viewBox="${v.join(' ')}" aria-hidden="true"><text x="${v[0] + 2}" y="${v[1] + v[3] * .05}" style="font-size:${f(v[3] * .055)}px">${fig.lab} · SINISTRO</text><g${fig.mirror ? ' transform="translate(200 0) scale(-1 1)"' : ''}>${fig.still}<g class="dyn"></g></g></svg>`; };
+/* ---- avanzamento della sessione: 3 segmenti per i giri + 1 per il pendolo, proporzionali al tempo ---- */
+const W_ISO = CFG.reps * CFG.push + (CFG.reps - 1) * CFG.rest, W_PEND = CFG.pend;
+const stepW = st => st.kind === 'iso' ? W_ISO : W_PEND;
+const segOf = st => st.seg;
+const GAP = 6;
+let SEGW = [], SEG_PD = [], TOTW = 0, SEGS = [];
+function usePlan(steps, custom = null) {
+  STEPS = steps; S.custom = custom;
+  SEGW = []; SEG_PD = [];
+  steps.forEach(st => { SEGW[st.seg] = (SEGW[st.seg] || 0) + stepW(st); SEG_PD[st.seg] = st.kind === 'pend'; });
+  TOTW = SEGW.reduce((a, b) => a + b, 0);
+  SEGS = []; let pos = GAP / 2; const usable = 100 - GAP * SEGW.length;
+  SEGW.forEach(w => { const len = w / TOTW * usable; SEGS.push({ start: pos, len }); pos += len + GAP; });
+}
+usePlan(STEPS);
+function ring(fr = SEGW.map(() => 0), extra = '') {
+  let s = `<svg class="ring" viewBox="0 0 48 48" aria-hidden="true"><g transform="rotate(-90 24 24)">`;
+  SEGS.forEach(g => { s += `<circle class="rt" cx="24" cy="24" r="20" pathLength="100" stroke-dasharray="${f(g.len)} 200" stroke-dashoffset="${f(-g.start)}"/>`; });
+  SEGS.forEach((g, k) => { s += `<circle class="rp${SEG_PD[k] ? ' pd' : ''}" data-seg="${k}" cx="24" cy="24" r="20" pathLength="100" stroke-dasharray="${f(g.len * fr[k])} 200" stroke-dashoffset="${f(-g.start)}" opacity="${fr[k] > .001 ? 1 : 0}"/>`; });
+  return s + `</g>${extra}</svg>`;
+}
+// quota fatta di ogni segmento, fino allo step i (+ secondi fatti dello step in corso)
+function fracsAt(i, partial = 0) {
+  const done = SEGW.map(() => 0);
+  for (let j = 0; j < i && j < STEPS.length; j++) done[segOf(STEPS[j])] += stepW(STEPS[j]);
+  if (i < STEPS.length) done[segOf(STEPS[i])] += partial;
+  return done.map((d, k) => clamp(d / SEGW[k]));
+}
+function fracsByAmount(units) {
+  let before = 0;
+  return SEGW.map(w => { const v = clamp((units - before) / w); before += w; return v; });
+}
+const pctOf = fr => Math.floor(fr.reduce((a, x, k) => a + x * SEGW[k], 0) / TOTW * 100 + 1e-9);
+let lastPct = null;
+function paintRing(fr, root) {
+  root.querySelectorAll('.rp').forEach(c => {
+    const k = +c.dataset.seg, v = fr[k];
+    c.setAttribute('stroke-dasharray', `${f(SEGS[k].len * v)} 200`);
+    c.setAttribute('opacity', v > .001 ? 1 : 0);
+  });
+  const pc = pctOf(fr);
+  if (pc !== lastPct) { lastPct = pc; root.querySelectorAll('[data-pct]').forEach(n => n.textContent = pc); }
+}
+function pill(l1, l2) { const fr = fracsAt(S.i); return `<div class="pill glass"><div class="rw">${ring(fr)}<b data-pct>${pctOf(fr)}</b></div><div class="pt"><strong>${l1}</strong><small>${l2}</small></div></div>`; }
+const sw = v => `<span class="swap" data-swap><span>${v}</span></span>`;
+function swapText(sel, v) {
+  stage.querySelectorAll(sel).forEach(el => {
+    const box = el.querySelector('[data-swap]') || el;
+    const cur = [...box.children].find(n => !n.classList.contains('sw-out'));
+    if (cur && cur.textContent === String(v)) return;
+    if (REDUCE || !cur) { box.innerHTML = `<span>${v}</span>`; return; }
+    cur.className = 'sw-out'; setTimeout(() => cur.remove(), 620);
+    const n = document.createElement('span'); n.className = 'sw-in'; n.textContent = v; box.appendChild(n);
+  });
+}
+function streak() {
+  const days = new Set(readLog().map(dayDiff));
+  let d = days.has(0) ? 0 : 1, n = 0;
+  while (days.has(d)) { n++; d++; }
+  return n;
+}
+
+function segs(n, cur) { let s = ''; for (let k = 0; k < n; k++) s += `<i class="${k < cur ? 'on' : k === cur ? 'cur' : ''}"></i>`; return `<div class="segs">${s}</div>`; }
+function repDots() { let s = ''; for (let k = 0; k < CFG.reps; k++) s += `<i class="${k < S.rep - 1 ? 'on' : k === S.rep - 1 ? 'cur' : ''}"></i>`; return s; }
+const isoPill = st => S.custom
+  ? [`Serie ${st.round} di ${STEPS.length}`, st.ex.short]
+  : [`Giro ${st.round} di ${CFG.rounds}`, `Esercizio ${st.k + 1} di ${EX.length}`];
+const stepLabel = st => st.kind === 'iso' ? `${S.custom ? 'Serie' : 'Giro'} ${st.round} · ${st.ex.short} · ripetizione ${S.rep} di ${CFG.reps}` : `Pendolo · ${st.p.name}`;
+
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>';
+function homeView() {
+  const iso = EX.length * (W_ISO + CFG.ready - 3) * CFG.rounds;
+  const mins = Math.round((iso + PEND.length * (CFG.pend + CFG.ready - 3)) / 60);
+  const prog = store.get('spalla.progress', null);
+  const canResume = prog && prog.started && prog.i >= 0 && prog.i < STEPS.length && Date.now() - prog.at < 6 * 3600e3;
+  const doneToday = readLog().some(x => dayDiff(x) === 0);
+  S.homeFr = doneToday && !canResume ? SEGW.map(() => 1) : SEGW.map(() => 0);
+  const center = doneToday && !canResume ? `<i class="ok">${CHECK}</i><span>Fatto oggi</span>` : `<b>${mins}</b><span>minuti</span>`;
+  const date = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+  const stk = streak();
+  const meta = '';
+
+  // carosello: ogni card ha la sua figura animata
+  S.homeFigs = [...EX.map(e => e.fig()), PEND[0].fig()];
+  const cards = EX.map((e, k) => `<button class="pc" data-act="detail" data-i="${k}" aria-label="${e.name}"><span class="pn">${k + 1}</span>${figSvg(S.homeFigs[k])}<b>${e.short}</b></button>`).join('')
+    + `<button class="pc pd" data-act="detail" data-i="${EX.length}" aria-label="Pendolo"><span class="pn">P</span>${figSvg(S.homeFigs[EX.length])}<b>Pendolo · alla fine</b></button>`;
+
+  const rs = canResume ? STEPS[prog.i] : null;
+  const actions = canResume
+    ? `<div class="two"><button class="go" data-act="resumeSession"><span>Riprendi</span><small>${rs.kind === 'iso' ? `Giro ${rs.round} · ${rs.ex.short}` : `Pendolo · ${rs.p.name}`}</small></button>
+       <button class="go alt" data-act="start"><span>Inizia</span><small>Da capo</small></button></div>`
+    : `<button class="go" data-act="start"><span>${doneToday ? 'Allenati ancora' : 'Inizia'}</span>${ARROW}</button>`;
+
+  return `<div class="screen home enter">
+    <header class="h-top"><div><div class="eyebrow">${date}</div><h1>Spalla</h1></div><button class="icon glass" data-act="sound" data-sound-icon aria-label="Suono"></button></header>
+    <section class="h-hero" aria-label="Avanzamento di oggi">${ring(SEGW.map(() => 0))}<div class="h-center">${center}</div></section>
+    ${meta ? `<div class="h-meta">${meta}</div>` : ''}
+    <section class="h-plan">
+      <div class="h-sec"><span>Il programma</span><span>${CFG.rounds} giri · ${CFG.push}″ spingi ${CFG.rest}″ riposo</span></div>
+      <div class="h-grid">${cards}</div>
+    </section>
+    <div class="actions">${actions}</div>
+  </div>`;
+}
+function readyView(st) {
+  const iso = st.kind === 'iso';
+  const top = iso ? pill(...isoPill(st)) : pill('Pendolo', `${st.k + 1} di ${PEND.length}`);
+  const eyebrow = S.custom ? (iso && st.round > 1 ? `Serie ${st.round}` : 'Prossimo')
+    : iso ? (st.k === 0 && st.round > 1 ? `Giro ${st.round} · si riparte` : 'Prossimo') : (st.k === 0 ? 'Ultima parte' : 'Prossimo');
+  return `<div class="screen ready enter">
+    <div class="top">${top}</div>
+    <div class="mid"><div class="eyebrow">${eyebrow}</div><h2>${iso ? st.ex.name : st.p.name}</h2>${figSvg(S.fig)}<p class="cue">${iso ? st.ex.cue : st.p.cue}</p>${iso ? `<p class="posture">${POSTURE}</p>` : ''}</div>
+    <div class="bot"><div class="tapto">Tocca per<br>partire</div><div class="count"><span class="num" data-num>${sw(CFG.ready)}</span><span class="sub">sec</span></div></div>
+  </div>`;
+}
+function workView(st) {
+  if (st.kind === 'iso') return `<div class="screen work enter">
+    <div class="top">${pill(...isoPill(st))}</div>
+    <div class="center"><div class="exname">${st.ex.name}</div><div class="phase" data-phase>${sw('Spingi')}</div><div class="num big" data-num>${sw(CFG.push)}</div><div class="reps" data-reps>${repDots()}</div></div>
+    ${figSvg(S.fig)}
+  </div>`;
+  return `<div class="screen work enter">
+    <div class="top">${pill('Pendolo', `${st.k + 1} di ${PEND.length}`)}</div>
+    <div class="center"><div class="exname">Pendolo · ${st.p.name}</div><div class="phase" data-phase>${sw(st.p.mode === 'circ' ? 'Un senso' : 'Oscilla')}</div><div class="num big" data-num>${sw(CFG.pend)}</div></div>
+    ${figSvg(S.fig)}
+    <div class="bot"><span class="sub">Braccio morbido, spalla giù</span></div>
+  </div>`;
+}
+function doneView() {
+  const mins = Math.max(1, Math.round((performance.now() - S.startedAt) / 60000));
+  const stk = streak();
+  return `<div class="screen done enter">
+    ${ring(undefined, '<path class="check" d="M16 24.5l5.5 5.5L32.5 19"/>')}
+    <div class="eyebrow">${S.custom ? 'Esercizio completato' : 'Sessione completata'} · 100%</div>
+    <h1>Fatto.</h1>
+    <p>${S.custom ? `${S.custom} · ${STEPS.filter(x => x.kind === 'iso').length * CFG.reps || PEND.length + ' movimenti'}${STEPS[0].kind === 'iso' ? ' spinte' : ''}` : `${CFG.rounds} giri · ${EX.length * CFG.rounds * CFG.reps} spinte · pendolo`} · ${mins} min</p>
+
+    <button class="go" data-act="home">Fine</button>
+  </div>`;
+}
+
+/* ================= Flusso ================= */
+function goHome() {
+  hideRemind(true); closeDetail(true);
+  usePlan(fullPlan());
+  S.homeAt = performance.now();
+  S.screen = 'home'; S.paused = false; sheet.hidden = true;
+  render(homeView(), false);
+}
+function enterReady(t) {
+  hideRemind();
+  const st = STEPS[S.i];
+  S.screen = 'ready'; S.t0 = t; S.dur = CFG.ready; S.phase = ''; S.enteredAt = t; S.eff = 0; S.dir = 1;
+  S.fig = st.kind === 'iso' ? st.ex.fig() : st.p.fig();
+  stage.dataset.tone = 'ready';
+  if (!S.custom) store.set('spalla.progress', { i: S.i, at: Date.now(), started: S.worked > 0 });
+  render(readyView(st), true);
+}
+function beginWork(t) {
+  const st = STEPS[S.i];
+  S.screen = 'work'; S.t0 = t; S.slosh = 0;
+  if (!S.custom) { S.worked++; store.set('spalla.progress', { i: S.i, at: Date.now(), started: true }); }
+  if (st.kind === 'iso') { S.rep = 1; S.phase = 'push'; S.dur = CFG.push; stage.dataset.tone = 'push'; }
+  else { S.phase = 'pend'; S.dur = CFG.pend; S.dir = 1; stage.dataset.tone = 'pend'; }
+  render(workView(st), true);
+  SND.go();
+}
+function goStep(i, t) {
+  S.i = i; S.paused = false; sheet.hidden = true;
+  if (S.i >= STEPS.length) return finish();
+  enterReady(t);
+}
+function nextStep(t) { goStep(S.i + 1, t); if (S.screen === 'ready') SND.next(); }
+function finish() {
+  if (!S.custom) {
+    if (S.worked >= Math.ceil((STEPS.length - S.fromI) * .6)) store.set('spalla.log', [...readLog(), new Date().toISOString()].slice(-400));
+    store.del('spalla.progress');
+  }
+  S.screen = 'done'; S.doneAt = performance.now();
+  stage.dataset.tone = 'push';
+  render(doneView(), true);
+  SND.done();
+}
+function setText(sel, v) { stage.querySelectorAll(sel).forEach(n => n.textContent = v); }
+function setHTML(sel, v) { stage.querySelectorAll(sel).forEach(n => n.innerHTML = v); }
+function advance() {
+  const end = S.t0 + S.dur * 1000;
+  if (S.screen === 'ready') return beginWork(end);
+  const st = STEPS[S.i];
+  if (st.kind === 'pend') return nextStep(end);
+  S.slosh = 1;
+  if (S.phase === 'push') {
+    if (S.rep >= CFG.reps) return nextStep(end);
+    S.phase = 'rest'; S.t0 = end; S.dur = CFG.rest;
+    swapText('[data-phase]', 'Riposa');
+    SND.rest();
+  } else {
+    S.rep++; S.phase = 'push'; S.t0 = end; S.dur = CFG.push;
+    swapText('[data-phase]', S.rep === CFG.reps ? 'Ultima' : 'Spingi'); setHTML('[data-reps]', repDots());
+    SND.go();
+  }
+}
+/* ---- promemoria postura: compare a caso mentre lavori (ogni 18-40 secondi di esercizio).
+   Entra e esce con una molla vera (fisica massa-molla-smorzatore), così il movimento è continuo e morbido. ---- */
+const rand = (a, b) => a + Math.random() * (b - a);
+let workClock = 0, nextRemind = rand(8, 18), remindTimer = 0, remindAt = 0;
+const spr = { x: 0, v: 0, to: 0 };
+const remindCard = remindEl.querySelector('.card');
+const rmA = document.getElementById('rmA'), rmB = document.getElementById('rmB');
+function showRemind() {
+  clearTimeout(remindTimer);
+  remindEl.hidden = false;
+  if (spr.x < .05) { spr.x = 0; spr.v = 0; remindAt = performance.now(); }
+  spr.to = 1;
+  SND.remind();
+  remindTimer = setTimeout(() => hideRemind(), 3600);
+}
+function hideRemind(now) {
+  clearTimeout(remindTimer);
+  if (now === true) { spr.x = spr.v = spr.to = 0; remindEl.hidden = true; return; }
+  spr.to = 0;
+}
+// Le due figure: braccio che si chiude contro il fianco; petto che si apre e spalle indietro.
+function remindDraw(t) {
+  const e = (performance.now() - remindAt) / 1000;
+  const s1 = REDUCE ? 1 : ease(clamp((e - .35) / .7));
+  const s2 = REDUCE ? 1 : ease(clamp((e - .6) / .7));
+  // ascella (di fronte, braccio sinistro = a destra di chi guarda)
+  const Sh = [55, 31], a = lerp(32, 4, s1), E = pol(Sh, 19, a), H = [E[0] - 1, E[1] + 7];
+  rmA.innerHTML = `<g class="bd">${dot([40, 14], 7.5)}${line([[25, 31], [55, 31]], 9)}${line([[40, 34], [40, 64]], 20)}${line([[25, 32], [22, 54]], 7)}</g>`
+    + rings([51, 38], t, s1 * .9)
+    + limb([Sh, E, H], 7.5, H, 4.5)
+    + arrowPath([77, 46], [66, 46], s1);
+  // petto (di lato): il petto va avanti, le spalle indietro
+  const c = lerp(40, 54, s2), sx = lerp(41, 35, s2);
+  rmB.innerHTML = `<g class="bd"><path stroke-width="16" d="M38 66Q${f(c)} 46 ${f(sx)} 29"/>${dot([sx + 4, 14], 7.5)}${line([[sx, 31], [sx - 1, 50], [sx + 1, 62]], 6)}</g>`
+    + `<path class="gap" stroke-width="11" d="M${f(c - 7)} 33Q${f(c + 1)} 41 ${f(c - 6)} 52"/><path class="ac" stroke-width="5" d="M${f(c - 7)} 33Q${f(c + 1)} 41 ${f(c - 6)} 52"/>`
+    + arrowPath([c + 4, 42], [c + 15, 42], s2)
+    + arrowPath([sx + 2, 22], [sx - 8, 22], s2 * .8);
+}
+function remindFrame(dt, t) {
+  if (remindEl.hidden) return;
+  if (REDUCE) { spr.x = spr.to; spr.v = 0; }
+  else {
+    // entrata: un filo di rimbalzo; uscita: più rapida e senza rimbalzo
+    const k = spr.to ? 210 : 320, c = spr.to ? 19 : 34;
+    for (let i = 0; i < 4; i++) { const acc = -k * (spr.x - spr.to) - c * spr.v; spr.v += acc * dt / 4; spr.x += spr.v * dt / 4; }
+  }
+  if (spr.to === 0 && spr.x < .02 && Math.abs(spr.v) < .2) { hideRemind(true); return; }
+  const x = spr.x, out = spr.to === 0;
+  remindCard.style.transform = `translateY(${f((1 - x) * (out ? -18 : 46))}px) scale(${((out ? .9 : .7) + (out ? .1 : .3) * x).toFixed(4)})`;
+  remindCard.style.opacity = clamp(x * 1.5);
+  remindDraw(t);
+}
+
+function pause() {
+  if (S.paused || (S.screen !== 'work' && S.screen !== 'ready')) return;
+  S.paused = true; S.left = S.dur * 1000 - (performance.now() - S.t0);
+  quitBtn.textContent = 'Termina'; delete quitBtn.dataset.armed;
+  document.getElementById('sheetInfo').textContent = stepLabel(STEPS[S.i]);
+  const fr = fracsAt(S.i, partialNow(performance.now()));
+  document.getElementById('sheetRing').innerHTML = ring(fr);
+  document.getElementById('sheetPct').textContent = pctOf(fr) + '% completato';
+  document.getElementById('prevBtn').disabled = S.i === 0;
+  paintSound();
+  hideRemind(true);
+  sheet.hidden = false;
+}
+function partialNow(now) {
+  if (S.screen !== 'work') return 0;
+  const e = clamp((S.paused ? S.dur * 1000 - S.left : now - S.t0) / 1000, 0, S.dur);
+  if (STEPS[S.i].kind === 'pend') return e;
+  return Math.min(W_ISO, (S.rep - 1) * (CFG.push + CFG.rest) + (S.phase === 'push' ? e : CFG.push + e));
+}
+function resume() {
+  if (!S.paused) return;
+  S.paused = false; S.t0 = performance.now() - (S.dur * 1000 - S.left);
+  sheet.hidden = true; keepAwake();
+}
+
+/* ================= Tocchi ================= */
+document.addEventListener('click', e => {
+  if (e.target.closest('.hap')) return;
+  if (lpFired) { lpFired = false; return; }
+  unlockAudio(); keepAwakeFromTap();
+  if (e.isTrusted && (e.target.closest('button') || S.screen === 'ready' || S.screen === 'work')) haptic();
+  const b = e.target.closest('[data-act]');
+  const act = b && b.dataset.act, now = performance.now();
+  if (act === 'start') { usePlan(fullPlan()); S.worked = 0; S.fromI = 0; workClock = 0; nextRemind = rand(8, 18); S.startedAt = now; keepAwake(); return goStep(0, now); }
+  if (act === 'resumeSession') { usePlan(fullPlan()); const pi = store.get('spalla.progress', { i: 0 }).i; S.worked = 1; S.fromI = pi; S.startedAt = now; keepAwake(); return goStep(pi, now); }
+  if (act === 'home') return goHome();
+  if (act === 'detail') return openDetail(+b.dataset.i);
+  if (act === 'closeDetail') return closeDetail();
+  if (act === 'runOne') return runOne();
+  if (e.target === detailEl) return closeDetail();
+  if (act === 'menu') return pause();
+  if (act === 'resume') return resume();
+  if (act === 'skip') return nextStep(now);
+  if (act === 'prev') return goStep(Math.max(0, S.i - 1), now);
+  if (act === 'sound') { S.sound = !S.sound; store.set('spalla.sound', S.sound); paintSound(); if (S.sound) SND.tick(); return; }
+  if (act === 'quit') {
+    if (quitBtn.dataset.armed) return goHome();
+    quitBtn.dataset.armed = '1'; quitBtn.textContent = 'Tocca ancora per uscire'; return;
+  }
+  if (e.target.closest('#sheet')) { if (e.target === sheet) resume(); return; }
+  if (S.screen === 'ready') { keepAwake(); beginWork(now); }
+  else if (S.screen === 'work') pause();
+});
+let lpTimer = 0, lpFired = false;
+stage.addEventListener('pointerdown', () => {
+  lpFired = false; clearTimeout(lpTimer);
+  if (S.screen === 'ready' && !S.paused) lpTimer = setTimeout(() => { lpFired = true; haptic(); pause(); }, 550);
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => stage.addEventListener(ev, () => clearTimeout(lpTimer)));
+document.addEventListener('keydown', e => {
+  if (e.key === ' ' || e.key === 'Enter') { if (!e.target.closest('button')) { e.preventDefault(); stage.click(); } }
+  if (e.key === 'Escape') { if (!detailEl.hidden) return closeDetail(); S.paused ? resume() : pause(); }
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) pause();
+  else { keepAwake(); playAwake(); try { ac && ac.state === 'suspended' && ac.resume(); } catch {} }
+});
+
+/* ================= Animazione ================= */
+let lastT = performance.now();
+function setFill(p, now) {
+  const H = stage.clientHeight, W = stage.clientWidth;
+  if (p <= .0005) { fill.style.clipPath = 'inset(100% 0 0 0)'; return; }
+  const idle = S.paused && S.screen !== 'done';
+  if (p >= .9995 && S.slosh < .02 && !idle) { fill.style.clipPath = 'inset(0 0 0 0)'; return; }
+  const y = H * (1 - p);
+  let A = REDUCE ? 0 : 8 * Math.sin(Math.PI * Math.min(1, p * 1.4)) + 16 * S.slosh;
+  if (idle && !REDUCE) A = Math.max(A, 7);   // in pausa: onda lenta, come acqua ferma che respira
+  const N = 24;
+  let pts = `0px ${H}px,${W}px ${H}px`;
+  for (let k = N; k >= 0; k--) {
+    const u = k / N;
+    const w = Math.sin(u * Math.PI * 2.2 + now / 520) * .75 + Math.sin(u * Math.PI * 4.1 - now / 830) * .25;
+    pts += `,${f(u * W)}px ${f(y + A * w)}px`;
+  }
+  fill.style.clipPath = `polygon(${pts})`;
+}
+/* ---- pannello "come si fa" ---- */
+const detailEl = document.getElementById('detail');
+const D_ = { i: -1, sets: 1, fig: null, at: 0 }; // un esercizio singolo = 1 serie
+function openDetail(i) {
+  D_.i = i; D_.at = performance.now();
+  const pend = i >= EX.length, ex = EX[i];
+  D_.fig = pend ? PEND[0].fig() : ex.fig();
+  detailEl.classList.toggle('pd', pend);
+  document.getElementById('dFig').innerHTML = figSvg(D_.fig);
+  document.getElementById('dEyebrow').textContent = pend ? 'Alla fine dei 3 giri' : `Esercizio ${i + 1} di ${EX.length}`;
+  document.getElementById('dTitle').textContent = pend ? 'Pendolo' : ex.name;
+  document.getElementById('dCue').innerHTML = pend
+    ? `Altra mano sul tavolo, busto in avanti, braccio morbido. Tre movimenti: avanti e indietro, laterale, cerchietti.`
+    : `${ex.cue}<small>${POSTURE}</small>`;
+  document.getElementById('dSpec').innerHTML = pend
+    ? `<span>3 movimenti</span><span>${CFG.pend}″ ciascuno</span>`
+    : `<span>${CFG.push}″ spingi</span><span>${CFG.rest}″ riposo</span><span>× ${CFG.reps}</span>`;
+  document.getElementById('dRun').innerHTML = `${pend ? 'Fai il pendolo' : 'Fai questo esercizio'}${ARROW}`;
+  detailEl.classList.remove('closing');
+  detailEl.hidden = false;
+}
+function closeDetail(now) {
+  if (detailEl.hidden) return;
+  if (now === true) { detailEl.hidden = true; D_.fig = null; return; }
+  detailEl.classList.add('closing');
+  setTimeout(() => { detailEl.hidden = true; detailEl.classList.remove('closing'); D_.fig = null; }, 280);
+}
+function runOne() {
+  const i = D_.i, pend = i >= EX.length;
+  usePlan(singlePlan(i, D_.sets), pend ? 'Pendolo' : EX[i].short + (D_.sets > 1 ? ` · ${D_.sets} serie` : ''));
+  closeDetail(true);
+  workClock = 0; nextRemind = rand(8, 18);
+  S.startedAt = performance.now(); keepAwake();
+  goStep(0, performance.now());
+}
+
+function homeFrame(now, t) {
+  if (D_.fig) {
+    // stessa dimostrazione della schermata "Prossimo": arriva in posizione e poi spinge a ritmo
+    const tr = (now - D_.at) / 1000, b = REDUCE ? 1 : clamp((tr - .3) / 1.1);
+    const eff = D_.i < EX.length && tr > 1.6 && ((tr - 1.6) % 2.8) < 1.5 ? 1 : 0;
+    D_.eff = (D_.eff || 0) + (eff - (D_.eff || 0)) * .15;
+    const dyn = detailEl.querySelector('.dyn');
+    if (dyn) dyn.innerHTML = D_.fig.draw(t, b, D_.eff, REDUCE ? 0 : t * Math.PI * 2 / 2.4);
+  }
+  const done = S.homeFr.reduce((a, x, k) => a + x * SEGW[k], 0);
+  paintRing(fracsByAmount(ease(clamp((now - S.homeAt - 250) / 1400)) * done), stage);
+  const dyns = stage.querySelectorAll('.base .pc .dyn');
+  S.homeFigs.forEach((fg, k) => {
+    if (!dyns[k]) return;
+    const eff = REDUCE ? 0 : .5 - .5 * Math.cos(t * 2.2 + k * 1.1);
+    dyns[k].innerHTML = fg.draw(t, 1, eff * eff, REDUCE ? 0 : t * Math.PI * 2 / 2.4);
+  });
+}
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(.1, (now - lastT) / 1000); lastT = now;
+  const t = now / 1000;
+  remindFrame(dt, t);
+
+  if (S.screen === 'done') {
+    const p = ease(clamp((now - S.doneAt) / 1400));
+    setFill(p, now);
+    paintRing(fracsByAmount(ease(clamp((now - S.doneAt - 150) / 1500)) * TOTW), stage);
+    return;
+  }
+  if (S.screen === 'home') { homeFrame(now, t); return; }
+  if (S.screen !== 'ready' && S.screen !== 'work') return;
+
+  if (!S.paused) {
+    let guard = 0;
+    while ((S.screen === 'ready' || S.screen === 'work') && !S.paused && now - S.t0 >= S.dur * 1000 && guard++ < 6) advance();
+    if (S.screen !== 'ready' && S.screen !== 'work') return;
+  }
+  const e = S.paused ? S.dur * 1000 - S.left : now - S.t0;
+  const p = clamp(e / (S.dur * 1000));
+  S.slosh *= Math.exp(-dt * 2.6);
+  setFill(S.phase === 'rest' ? 1 - p : p, now);
+
+  const remain = Math.max(1, Math.ceil(S.dur - e / 1000));
+  if (remain !== S.lastNum) {
+    if (S.lastNum !== null && !S.paused && S.screen === 'ready' && remain <= 3) SND.tick();
+    S.lastNum = remain; swapText('[data-num]', remain);
+  }
+
+  paintRing(fracsAt(S.i, partialNow(now)), stage);
+
+  // figura
+  const st = STEPS[S.i];
+  if (S.screen === 'work' && st.kind === 'iso' && !S.paused) {
+    workClock += dt;
+    if (workClock >= nextRemind) { nextRemind = workClock + rand(18, 40); showRemind(); }
+  }
+  let b = 1, target = 0;
+  if (S.screen === 'ready') {
+    const tr = (now - S.enteredAt) / 1000;
+    b = REDUCE ? 1 : clamp((tr - .35) / 1.1);
+    if (st.kind === 'iso' && tr > 1.8) target = ((tr - 1.8) % 2.8) < 1.5 ? 1 : 0;
+  } else if (st.kind === 'iso') target = S.phase === 'push' && !S.paused ? 1 : 0;
+  S.eff += (target - S.eff) * (1 - Math.exp(-dt * 9));
+  if (st.kind === 'pend') {
+    if (S.screen === 'work' && st.p.mode === 'circ' && p >= .5 && S.dir === 1) {
+      S.dir = -1; swapText('[data-phase]', 'Cambia senso'); SND.flip();
+    }
+    if (!S.paused && !REDUCE) S.ang += dt * (Math.PI * 2 / 2.4) * S.dir;
+  }
+  if (S.fig) setHTML('.dyn', S.fig.draw(t, b, S.eff, S.ang));
+}
+
+goHome();
+keepAwake();
+requestAnimationFrame(frame);
+})();
+</script>
+
+<script>if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));</script>
+</body>
+</html>
