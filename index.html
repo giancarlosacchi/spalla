@@ -96,6 +96,9 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .icon:active{transform:scale(.9)}
 .icon svg{width:18px;height:18px;opacity:.85}
 .num{font-family:var(--display);font-weight:600;font-variant-numeric:tabular-nums;line-height:.8;letter-spacing:-.02em}
+.num .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.num .dg{display:block;height:.74em;width:auto;overflow:visible}
+.num .dg path{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
 .segs{display:flex;gap:4px;margin-top:6px}
 .segs i{flex:1;height:4px;border-radius:2px;background:currentColor;opacity:.18}
 .segs i.on{opacity:.7}
@@ -190,7 +193,7 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .tapto{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.06em;text-transform:uppercase;line-height:1;animation:breathe 2.4s ease-in-out infinite}
 @keyframes breathe{50%{opacity:.55}}
 .count{display:flex;align-items:baseline;gap:4px}
-.count .num{font-size:58px}
+.count .num{font-size:58px;display:block}
 
 /* ---- work ---- */
 .work .center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:0}
@@ -240,14 +243,15 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .fig text{fill:currentColor;font-family:var(--display);font-weight:600;font-size:11px;letter-spacing:.16em;opacity:.45}
 
 /* ---- promemoria postura (popup a molla, mosso da JS) ---- */
-#remind{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 82px);z-index:4;display:flex;justify-content:center;pointer-events:none;padding:0 22px;--gapc:#1c1f25;--acc:var(--orange)}
-#remind .card{display:flex;align-items:center;gap:2px;padding:5px 18px 5px 8px;border-radius:999px;color:var(--ink);
-  background:rgba(22,24,29,.66);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(255,255,255,.08),0 10px 30px rgba(0,0,0,.3);
+#remind{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 82px);z-index:4;display:flex;justify-content:center;pointer-events:none;padding:0 18px;--gapc:#1c1f25;--acc:var(--orange)}
+#remind .card{width:100%;max-width:440px;height:150px;box-sizing:border-box;display:grid;grid-template-columns:1fr 1px 1fr;align-items:stretch;padding:10px 6px 14px;border-radius:30px;color:var(--ink);
+  background:rgba(20,22,27,.86);-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(255,255,255,.08),0 18px 50px rgba(0,0,0,.35);
   will-change:transform,opacity;transform-origin:50% 0}
-#remind .fig{width:46px;height:46px;flex-shrink:0}
-#remind .rt{display:flex;flex-direction:column;margin-left:8px}
-#remind .rt b{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.07em;text-transform:uppercase;line-height:1.2;white-space:nowrap}
+#remind .sep{background:rgba(255,255,255,.1);margin:10px 0}
+#remind .col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:0}
+#remind .col .fig{flex:1 1 auto;width:100%;min-height:0;max-height:200px}
+#remind .col b{font-family:var(--display);font-weight:700;font-size:clamp(17px,5.2vw,24px);letter-spacing:.06em;text-transform:uppercase;line-height:1;white-space:nowrap}
 
 /* ---- come si fa (pannello dalla Home) ---- */
 #detail{position:fixed;inset:0;z-index:6;background:rgba(8,9,11,.45);display:flex;align-items:flex-end;animation:fade .25s ease-out}
@@ -317,9 +321,9 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 </div>
 <div id="remind" hidden aria-live="polite">
   <div class="card">
-    <svg class="fig" viewBox="0 0 80 80" aria-hidden="true"><g id="rmA"></g></svg>
-    <svg class="fig" viewBox="0 0 80 80" aria-hidden="true"><g id="rmB"></g></svg>
-    <div class="rt"><b>Ascella attaccata</b><b>Petto in fuori</b></div>
+    <div class="col"><svg class="fig" viewBox="0 0 80 80" aria-hidden="true"><g id="rmA"></g></svg><b>Ascella attaccata</b></div>
+    <div class="sep"></div>
+    <div class="col"><svg class="fig" viewBox="0 0 80 80" aria-hidden="true"><g id="rmB"></g></svg><b>Petto in fuori</b></div>
   </div>
 </div>
 <div id="detail" hidden>
@@ -768,6 +772,107 @@ function swapText(sel, v) {
     box.innerHTML = REDUCE ? `<span>${v}</span>` : `<span class="sw-in">${v}</span>`;
   });
 }
+/* ================= Cifre che si trasformano =================
+   Ogni cifra è un unico tratto, come scritto a pennarello, campionato in DG_N punti equidistanti.
+   Quando il numero cambia, ogni punto viaggia dalla cifra vecchia alla nuova:
+   - l'inchiostro scorre lungo il tratto (i punti partono uno dopo l'altro, dall'inizio alla fine);
+   - a metà trasformazione il tratto si assottiglia, poi si riempie e si assesta con un piccolo rimbalzo;
+   - se cambia il numero di cifre (10 → 9) quella che sparisce si raccoglie in un punto e svanisce,
+     e la larghezza si ricentra con calma. Le unità restano sempre nello stesso posto (allineamento a destra). */
+const DG_N = 72, DG_W = 60, DG_H = 100, DG_GAP = 10, DG_SW = 11.5, DG_MS = 560;
+const arcP = (cx, cy, rx, ry, a0, a1, n = 36) => { const o = []; for (let i = 0; i <= n; i++) { const a = (a0 + (a1 - a0) * i / n) * D; o.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]); } return o; };
+const GLYPH = [
+  () => arcP(30, 50, 23, 43, -90, 270, 72),                                                         // 0
+  () => [[15, 24], [33, 7], [33, 93]],                                                              // 1
+  () => [...arcP(30, 30, 22, 23, -165, 15), [8, 93], [53, 93]],                                     // 2
+  () => [...arcP(29, 28, 20, 21, -160, 90), ...arcP(29, 71, 23, 22, -90, 155)],                     // 3
+  () => [[41, 93], [41, 7], [7, 66], [55, 66]],                                                     // 4
+  () => [[51, 7], [15, 7], [11, 45], ...arcP(29, 65, 23, 27, -145, 150)],                           // 5
+  () => [...arcP(52, 58, 44, 51, -112, -180, 24), ...arcP(30, 70, 22, 23, 180, 540, 48)],          // 6
+  () => [[7, 7], [53, 7], [22, 93]],                                                                // 7
+  () => [...arcP(30, 28, 18, 21, 90, 450, 40), ...arcP(30, 71, 23, 22, -90, 270, 44)],              // 8
+  () => [...arcP(30, 32, 22, 25, 0, 360, 48), [40, 93]],                                            // 9
+];
+function resample(pts, n) {
+  const L = [0];
+  for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const tot = L[L.length - 1], out = [];
+  for (let k = 0, j = 1; k < n; k++) {
+    const d = tot * k / (n - 1);
+    while (j < L.length - 1 && L[j] < d) j++;
+    const seg = L[j] - L[j - 1] || 1, u = (d - L[j - 1]) / seg;
+    out.push([pts[j - 1][0] + (pts[j][0] - pts[j - 1][0]) * u, pts[j - 1][1] + (pts[j][1] - pts[j - 1][1]) * u]);
+  }
+  return out;
+}
+const DIGITS = GLYPH.map(g => resample(g(), DG_N));
+const DOT = Array.from({ length: DG_N }, () => [DG_W / 2, DG_H / 2]);
+// una "scena" = cifre allineate a destra, ognuna con i suoi punti e la sua opacità
+const sceneOf = v => String(v).split('').map(c => ({ pts: DIGITS[+c], op: 1 }));
+const widthOf = n => n * DG_W + Math.max(0, n - 1) * DG_GAP;
+const NM = { now: null, from: null, to: null, t0: 0, anim: false };
+function smoothPath(pts, ox) {
+  // curva morbida che passa per i punti medi (niente spigoli dove il tratto curva)
+  let d = `M${f(pts[0][0] + ox)} ${f(pts[0][1])}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const mx = (pts[i][0] + pts[i + 1][0]) / 2 + ox, my = (pts[i][1] + pts[i + 1][1]) / 2;
+    d += `Q${f(pts[i][0] + ox)} ${f(pts[i][1])} ${f(mx)} ${f(my)}`;
+  }
+  const l = pts[pts.length - 1];
+  return d + `L${f(l[0] + ox)} ${f(l[1])}`;
+}
+function sceneSvg(sc, W, sw) {
+  let paths = '';
+  sc.forEach((g, j) => {
+    const fromRight = sc.length - 1 - j, ox = W - (fromRight + 1) * DG_W - fromRight * DG_GAP;
+    if (g.op > .01) paths += `<path d="${smoothPath(g.pts, ox)}" opacity="${f(g.op * 100) / 100}"/>`;
+  });
+  const pad = DG_SW;
+  return `<svg class="dg" viewBox="${f(-pad)} ${f(-pad)} ${f(W + pad * 2)} ${DG_H + pad * 2}" stroke-width="${f(sw)}" aria-hidden="true">${paths}</svg>`;
+}
+function numSvg(v) {
+  NM.now = { sc: sceneOf(v), W: widthOf(String(v).length) }; NM.val = String(v); NM.anim = false;
+  return sceneSvg(NM.now.sc, NM.now.W, DG_SW) + `<span class="sr">${v}</span>`;
+}
+function setNum(v) {
+  v = String(v);
+  if (v === NM.val) return;
+  NM.val = v;
+  const to = { sc: sceneOf(v), W: widthOf(v.length) };
+  if (REDUCE || !NM.now) { NM.now = to; NM.anim = false; paintNum(to, DG_SW); return; }
+  NM.from = NM.now; NM.to = to; NM.t0 = performance.now(); NM.anim = true;
+}
+// rimbalzo leggero alla fine (easeOutBack)
+const backOut = (x, k = 1.25) => 1 + (k + 1) * Math.pow(x - 1, 3) + k * Math.pow(x - 1, 2);
+function morphFrame(now) {
+  if (!NM.anim) return;
+  const p = clamp((now - NM.t0) / DG_MS);
+  const F = NM.from, T = NM.to, n = Math.max(F.sc.length, T.sc.length), sc = [];
+  for (let j = 0; j < n; j++) {               // j = posizione contando da destra
+    const fs = F.sc[F.sc.length - 1 - j] || { pts: DOT, op: 0 }, ts = T.sc[T.sc.length - 1 - j] || { pts: DOT, op: 0 };
+    const pts = new Array(DG_N);
+    for (let i = 0; i < DG_N; i++) {
+      const delay = .28 * i / (DG_N - 1);     // l'inchiostro scorre dall'inizio alla fine del tratto
+      const q = backOut(clamp((p - delay) / (1 - .28)));
+      pts[i] = [fs.pts[i][0] + (ts.pts[i][0] - fs.pts[i][0]) * q, fs.pts[i][1] + (ts.pts[i][1] - fs.pts[i][1]) * q];
+    }
+    sc.unshift({ pts, op: fs.op + (ts.op - fs.op) * ease(p) });
+  }
+  const W = F.W + (T.W - F.W) * ease(p);
+  const sw = DG_SW * (1 - .3 * Math.sin(Math.PI * Math.min(1, p * 1.15)));   // il tratto si assottiglia a metà
+  NM.now = { sc, W };
+  paintNum(NM.now, sw);
+  if (p >= 1) { NM.now = T; NM.anim = false; paintNum(T, DG_SW); }
+}
+function paintNum(scene, sw) {
+  const html = sceneSvg(scene.sc, scene.W, sw);
+  stage.querySelectorAll('[data-num]').forEach(el => {
+    const old = el.querySelector('.dg');
+    if (old) old.outerHTML = html;
+    const sr = el.querySelector('.sr'); if (sr) sr.textContent = NM.val;
+  });
+}
+
 function streak() {
   const days = new Set(readLog().map(dayDiff));
   let d = days.has(0) ? 0 : 1, n = 0;
@@ -825,18 +930,18 @@ function readyView(st) {
   return `<div class="screen ready enter">
     <div class="top">${top}</div>
     <div class="mid"><div class="eyebrow">${eyebrow}</div><h2>${iso ? st.ex.name : st.p.name}</h2>${figSvg(S.fig)}<p class="cue">${iso ? st.ex.cue : st.p.cue}</p>${iso ? `<p class="posture">${POSTURE}</p>` : ''}</div>
-    <div class="bot"><div class="tapto">Si parte<br>tra</div><div class="count"><span class="num" data-num>${sw(CFG.ready)}</span><span class="sub">sec</span></div></div>
+    <div class="bot"><div class="tapto">Si parte<br>tra</div><div class="count"><span class="num" data-num>${numSvg(CFG.ready)}</span><span class="sub">sec</span></div></div>
   </div>`;
 }
 function workView(st) {
   if (st.kind === 'iso') return `<div class="screen work enter">
     <div class="top">${pill(...isoPill(st))}</div>
-    <div class="center"><div class="exname">${st.ex.name}</div><div class="phase" data-phase>${sw('Spingi')}</div><div class="num big" data-num>${sw(CFG.push)}</div><div class="reps" data-reps>${repDots()}</div></div>
+    <div class="center"><div class="exname">${st.ex.name}</div><div class="phase" data-phase>${sw('Spingi')}</div><div class="num big" data-num>${numSvg(CFG.push)}</div><div class="reps" data-reps>${repDots()}</div></div>
     ${figSvg(S.fig)}
   </div>`;
   return `<div class="screen work enter">
     <div class="top">${pill('Pendolo', `${st.k + 1} di ${PEND.length}`)}</div>
-    <div class="center"><div class="exname">Pendolo · ${st.p.name}</div><div class="phase" data-phase>${sw(st.p.mode === 'circ' ? 'Un senso' : 'Oscilla')}</div><div class="num big" data-num>${sw(CFG.pend)}</div></div>
+    <div class="center"><div class="exname">Pendolo · ${st.p.name}</div><div class="phase" data-phase>${sw(st.p.mode === 'circ' ? 'Un senso' : 'Oscilla')}</div><div class="num big" data-num>${numSvg(CFG.pend)}</div></div>
     ${figSvg(S.fig)}
     <div class="bot"><span class="sub">Braccio morbido, spalla giù</span></div>
   </div>`;
@@ -924,6 +1029,13 @@ const remindCard = remindEl.querySelector('.card');
 const rmA = document.getElementById('rmA'), rmB = document.getElementById('rmB');
 function showRemind() {
   clearTimeout(remindTimer);
+  // occupa tutto lo spazio tra la barra in alto e il numero grande
+  const pillEl = stage.querySelector('.base .pill'), numEl = stage.querySelector('.base [data-num]');
+  if (pillEl && numEl) {
+    const top = pillEl.getBoundingClientRect().bottom + 12, bottom = numEl.getBoundingClientRect().top - 14;
+    remindEl.style.top = top + 'px';
+    remindCard.style.height = Math.max(110, bottom - top) + 'px';
+  }
   remindEl.hidden = false;
   if (spr.x < .05) { spr.x = 0; spr.v = 0; remindAt = performance.now(); }
   spr.to = 1;
@@ -1106,6 +1218,7 @@ function frame(now) {
   const dt = Math.min(.1, (now - lastT) / 1000); lastT = now;
   const t = now / 1000;
   remindFrame(dt, t);
+  morphFrame(now);
 
   if (S.screen === 'done') {
     const p = ease(clamp((now - S.doneAt) / 1400));
@@ -1129,7 +1242,7 @@ function frame(now) {
   const remain = Math.max(1, Math.ceil(S.dur - e / 1000));
   if (remain !== S.lastNum) {
     if (S.lastNum !== null && !S.paused && S.screen === 'ready' && remain <= 3) SND.tick();
-    S.lastNum = remain; swapText('[data-num]', remain);
+    S.lastNum = remain; setNum(remain);
   }
 
   paintRing(fracsAt(S.i, partialNow(now)), stage);
