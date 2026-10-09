@@ -779,7 +779,7 @@ function swapText(sel, v) {
    - a metà trasformazione il tratto si assottiglia, poi si riempie e si assesta con un piccolo rimbalzo;
    - se cambia il numero di cifre (10 → 9) quella che sparisce si raccoglie in un punto e svanisce,
      e la larghezza si ricentra con calma. Le unità restano sempre nello stesso posto (allineamento a destra). */
-const DG_N = 72, DG_W = 60, DG_H = 100, DG_GAP = 10, DG_SW = 11.5, DG_MS = 560;
+const DG_N = 96, DG_W = 60, DG_H = 100, DG_GAP = 10, DG_SW = 11.5, DG_MS = 700;
 const arcP = (cx, cy, rx, ry, a0, a1, n = 36) => { const o = []; for (let i = 0; i <= n; i++) { const a = (a0 + (a1 - a0) * i / n) * D; o.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]); } return o; };
 const GLYPH = [
   () => arcP(30, 50, 23, 43, -90, 270, 72),                                                         // 0
@@ -834,41 +834,83 @@ function numSvg(v) {
   NM.now = { sc: sceneOf(v), W: widthOf(String(v).length) }; NM.val = String(v); NM.anim = false;
   return sceneSvg(NM.now.sc, NM.now.W, DG_SW) + `<span class="sr">${v}</span>`;
 }
+// Abbina la cifra nuova alla vecchia nel modo che fa viaggiare i punti il meno possibile:
+// prova il tratto al contrario e, per le cifre chiuse (0 e 8), tutti i punti di partenza.
+const CLOSED = new Set(['0', '8']);
+function alignTo(fromPts, toPts, closed) {
+  if (fromPts === DOT || toPts === DOT) return toPts;
+  const cands = [toPts, [...toPts].reverse()];
+  const cost = c => { let e = 0; for (let i = 0; i < DG_N; i += 2) { const dx = c[i][0] - fromPts[i][0], dy = c[i][1] - fromPts[i][1]; e += dx * dx + dy * dy; } return e; };
+  let best = toPts, bestE = cost(toPts);
+  cands.forEach(base => {
+    const steps = closed ? DG_N : 1;
+    for (let sft = 0; sft < steps; sft += 3) {
+      const c = sft ? [...base.slice(sft), ...base.slice(0, sft)] : base;
+      const e = cost(c);
+      if (e < bestE) { bestE = e; best = c; }
+    }
+  });
+  return best;
+}
 function setNum(v) {
   v = String(v);
   if (v === NM.val) return;
   NM.val = v;
   const to = { sc: sceneOf(v), W: widthOf(v.length) };
   if (REDUCE || !NM.now) { NM.now = to; NM.anim = false; paintNum(to, DG_SW); return; }
-  NM.from = NM.now; NM.to = to; NM.t0 = performance.now(); NM.anim = true;
+  const F = NM.now;
+  // allinea ogni cifra (contando da destra) a quella che c'era prima nello stesso posto
+  to.sc = to.sc.map((g, k) => {
+    const j = to.sc.length - 1 - k, fs = F.sc[F.sc.length - 1 - j];
+    return fs ? { pts: alignTo(fs.pts, g.pts, CLOSED.has(v[k])), op: 1 } : g;
+  });
+  NM.from = F; NM.to = to; NM.t0 = performance.now(); NM.anim = true;
 }
-// rimbalzo leggero alla fine (easeOutBack)
-const backOut = (x, k = 1.25) => 1 + (k + 1) * Math.pow(x - 1, 3) + k * Math.pow(x - 1, 2);
+// curva morbidissima: parte e arriva senza scatti (smootherstep)
+const smoother = x => x * x * x * (x * (x * 6 - 15) + 10);
 function morphFrame(now) {
   if (!NM.anim) return;
   const p = clamp((now - NM.t0) / DG_MS);
   const F = NM.from, T = NM.to, n = Math.max(F.sc.length, T.sc.length), sc = [];
-  for (let j = 0; j < n; j++) {               // j = posizione contando da destra
+  const STAG = .22;                              // l'inchiostro scorre dall'inizio alla fine del tratto
+  const melt = Math.sin(Math.PI * p);            // 0 all'inizio e alla fine, 1 a metà
+  for (let j = 0; j < n; j++) {                  // j = posizione contando da destra
     const fs = F.sc[F.sc.length - 1 - j] || { pts: DOT, op: 0 }, ts = T.sc[T.sc.length - 1 - j] || { pts: DOT, op: 0 };
-    const pts = new Array(DG_N);
+    let pts = new Array(DG_N);
     for (let i = 0; i < DG_N; i++) {
-      const delay = .28 * i / (DG_N - 1);     // l'inchiostro scorre dall'inizio alla fine del tratto
-      const q = backOut(clamp((p - delay) / (1 - .28)));
+      const q = smoother(clamp((p - STAG * i / (DG_N - 1)) / (1 - STAG)));
       pts[i] = [fs.pts[i][0] + (ts.pts[i][0] - fs.pts[i][0]) * q, fs.pts[i][1] + (ts.pts[i][1] - fs.pts[i][1]) * q];
     }
-    sc.unshift({ pts, op: fs.op + (ts.op - fs.op) * ease(p) });
+    // a metà strada il tratto si "scioglie" come un liquido: tolgo spigoli e incroci, poi torna nitido
+    const k = .5 * melt;
+    if (k > .02) for (let it = 0; it < 3; it++) {
+      const nx = pts.map((pt, i) => (i === 0 || i === DG_N - 1) ? pt
+        : [pt[0] + ((pts[i - 1][0] + pts[i + 1][0]) / 2 - pt[0]) * k, pt[1] + ((pts[i - 1][1] + pts[i + 1][1]) / 2 - pt[1]) * k]);
+      pts = nx;
+    }
+    sc.unshift({ pts, op: fs.op + (ts.op - fs.op) * smoother(p) });
   }
-  const W = F.W + (T.W - F.W) * ease(p);
-  const sw = DG_SW * (1 - .3 * Math.sin(Math.PI * Math.min(1, p * 1.15)));   // il tratto si assottiglia a metà
+  const W = F.W + (T.W - F.W) * smoother(p);
+  const sw = DG_SW * (1 - .2 * melt);            // il tratto si assottiglia appena, a metà
   NM.now = { sc, W };
   paintNum(NM.now, sw);
   if (p >= 1) { NM.now = T; NM.anim = false; paintNum(T, DG_SW); }
 }
+// aggiorna solo le linee esistenti (niente ricostruzione del disegno a ogni fotogramma)
 function paintNum(scene, sw) {
-  const html = sceneSvg(scene.sc, scene.W, sw);
+  const pad = DG_SW, vis = scene.sc.map((g, j) => ({ g, j })).filter(o => o.g.op > .01);
+  const vb = `${f(-pad)} ${f(-pad)} ${f(scene.W + pad * 2)} ${DG_H + pad * 2}`;
   stage.querySelectorAll('[data-num]').forEach(el => {
-    const old = el.querySelector('.dg');
-    if (old) old.outerHTML = html;
+    const svg = el.querySelector('.dg');
+    if (!svg) return;
+    let paths = svg.querySelectorAll('path');
+    if (paths.length !== vis.length) { svg.innerHTML = vis.map(() => '<path/>').join(''); paths = svg.querySelectorAll('path'); }
+    svg.setAttribute('viewBox', vb); svg.setAttribute('stroke-width', f(sw));
+    vis.forEach(({ g, j }, k) => {
+      const fromRight = scene.sc.length - 1 - j, ox = scene.W - (fromRight + 1) * DG_W - fromRight * DG_GAP;
+      paths[k].setAttribute('d', smoothPath(g.pts, ox));
+      paths[k].setAttribute('opacity', f(g.op * 100) / 100);
+    });
     const sr = el.querySelector('.sr'); if (sr) sr.textContent = NM.val;
   });
 }
