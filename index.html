@@ -185,9 +185,9 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .home .go.alt::after{display:none}
 
 /* ---- ready ---- */
-.ready .mid{flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;min-height:0}
-.ready h2{font-family:var(--display);font-weight:700;font-size:clamp(40px,12vw,62px);line-height:.92;margin:0;text-transform:uppercase;text-wrap:balance}
-.ready .fig{width:min(88vw,360px);height:auto;max-height:40vh;align-self:center;margin:2px 0}
+.ready .mid{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:18px;min-height:0;text-align:center}
+.ready h2{font-family:var(--display);font-weight:700;font-size:clamp(38px,11vw,58px);line-height:.92;margin:0;text-transform:uppercase;text-wrap:balance;max-width:12ch}
+.ready .fig{width:min(90vw,380px);height:auto;max-height:44vh;align-self:center;margin:0}
 .cue{font-size:18px;line-height:1.35;margin:0;max-width:32ch;text-wrap:pretty}
 .posture{font-size:15px;font-weight:600;margin:0;opacity:.6}
 .bot{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
@@ -195,6 +195,8 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 @keyframes breathe{50%{opacity:.55}}
 .count{display:flex;align-items:baseline;gap:4px}
 .count .num{font-size:58px;display:block}
+.ready .count{justify-content:center;padding-bottom:6px}
+.ready .count .num{font-size:clamp(84px,24vw,120px)}
 
 /* ---- work ---- */
 .work .center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:0}
@@ -995,12 +997,11 @@ function homeView() {
 function readyView(st) {
   const iso = st.kind === 'iso';
   const top = iso ? pill(...isoPill(st)) : pill('Pendolo', `${st.k + 1}/${PEND.length}`);
-  const eyebrow = S.custom ? (iso && st.round > 1 ? `Serie ${st.round}` : 'Prossimo')
-    : iso ? (st.k === 0 && st.round > 1 ? `Giro ${st.round} · si riparte` : 'Prossimo') : (st.k === 0 ? 'Ultima parte' : 'Prossimo');
+  // schermata essenziale: nome, omino che fa il movimento, conto alla rovescia
   return `<div class="screen ready enter">
     <div class="top">${top}</div>
-    <div class="mid"><div class="eyebrow">${eyebrow}</div><h2>${iso ? st.ex.name : st.p.name}</h2>${figSvg(S.fig)}<p class="cue">${iso ? st.ex.cue : st.p.cue}</p>${iso ? `<p class="posture">${POSTURE}</p>` : ''}</div>
-    <div class="bot"><div class="tapto">Si parte<br>tra</div><div class="count"><span class="num" data-num>${numSvg(CFG.ready)}</span><span class="sub">sec</span></div></div>
+    <div class="mid"><h2>${iso ? st.ex.name : 'Pendolo · ' + st.p.name}</h2>${figSvg(S.fig)}</div>
+    <div class="count"><span class="num" data-num>${numSvg(CFG.ready)}</span></div>
   </div>`;
 }
 function workView(st) {
