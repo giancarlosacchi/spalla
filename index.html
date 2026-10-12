@@ -783,12 +783,24 @@ function paintRing(fr, root) {
 }
 function pill(l1, l2) { const fr = fracsAt(S.i); return `<div class="pill glass"><div class="rw">${ring(fr)}<b data-pct>${pctOf(fr)}</b></div><div class="pt"><strong data-left>${fmtLeft(secondsLeft(performance.now()))}</strong><small>${l1} · ${l2}</small></div></div>`; }
 // secondi che mancano alla fine: lavoro che resta + le pause da 5" tra un esercizio e l'altro
+// Tempo che manca alla fine, calcolato in millisecondi esatti a partire dallo STESSO istante
+// del numero grande dell'esercizio: così i due timer scattano insieme, senza scarti di arrotondamento.
 function secondsLeft(now) {
-  if (S.screen !== 'work' && S.screen !== 'ready') return Math.round(TOTW + (STEPS.length - S.i - 1) * CFG.ready + CFG.ready);
-  const done = fracsAt(S.i, partialNow(now)).reduce((a, x, k) => a + x * SEGW[k], 0);
-  let left = TOTW - done + (STEPS.length - S.i - 1) * CFG.ready;
-  if (S.screen === 'ready') left += Math.max(0, CFG.ready - (S.paused ? S.dur * 1000 - S.left : now - S.t0) / 1000);
-  return Math.max(0, Math.ceil(left));
+  const P = CFG.push * 1000, Rr = CFG.rest * 1000, RD = CFG.ready * 1000;
+  const stepMs = st => stepW(st) * 1000;
+  const i = Math.min(S.i, STEPS.length - 1);
+  let ms = 0;
+  for (let j = i + 1; j < STEPS.length; j++) ms += RD + stepMs(STEPS[j]);   // ogni esercizio successivo ha i suoi 5" prima
+  const eMs = S.paused ? S.dur * 1000 - S.left : now - S.t0;
+  const st = STEPS[i];
+  if (S.screen === 'ready') ms += Math.max(0, RD - eMs) + stepMs(st);
+  else if (S.screen === 'work') {
+    const left = Math.max(0, S.dur * 1000 - eMs);
+    if (st.kind === 'pend') ms += left;
+    else if (S.phase === 'push') ms += left + (CFG.reps - S.rep) * (Rr + P);
+    else ms += left + (CFG.reps - S.rep) * P + Math.max(0, CFG.reps - S.rep - 1) * Rr;
+  } else ms += RD + stepMs(st);
+  return Math.max(0, Math.ceil(ms / 1000 - 1e-6));
 }
 const fmtLeft = sec => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 let lastLeft = null;
