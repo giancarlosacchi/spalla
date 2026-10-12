@@ -1389,7 +1389,7 @@ function frame(now) {
   const r = document.documentElement.style;
   r.setProperty('--pat-l', svg('#ffffff'));
   r.setProperty('--pat-d', svg('#000000'));
-  r.setProperty('--pat-size', T + 'px');
+  r.setProperty('--pat-size', (T * 2.4) + 'px');   // motivo ingrandito: vermetti più grandi e meno numerosi
 })();
 
 goHome();
