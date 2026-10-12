@@ -29,6 +29,7 @@
   --blue:#86b4ff;      /* pendulum: relaxed movement */
   --red:#ff453a;       /* spingi: sforzo */
   --green:#32d74b;     /* rilassa */
+  --yellow:#ffd60a;    /* promemoria postura */
   --dark:#15110c;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -81,8 +82,8 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .pill .rw .ring{width:100%;height:100%}
 .pill .rw b{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:0;font-variant-numeric:tabular-nums}
 .pill .pt{display:flex;flex-direction:column;gap:2px;line-height:1.05;min-width:0}
-.pill strong{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.06em;white-space:nowrap}
-.pill small{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.12em;opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill strong{font-family:var(--display);font-weight:700;font-size:24px;line-height:1;letter-spacing:.02em;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill small{font-family:var(--display);font-weight:600;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* numeri che scorrono, come il timer di iOS */
 .swap{display:inline-grid}
@@ -200,7 +201,15 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 /* ---- work ---- */
 .work .center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:0}
 .phase{font-family:var(--display);font-weight:700;font-size:30px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:8px;padding-left:.22em;text-align:center}
-.work .num.big{font-size:clamp(120px,min(46vw,26vh),280px)}
+.work .half{flex:1 1 0;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.work .half.up{justify-content:flex-end;padding-bottom:4px}
+.work .num.big{font-size:min(66vw,30vh,330px)}
+.work .phase{font-size:clamp(30px,9vw,44px);margin-bottom:14px}
+.work .reps{width:100%;display:flex;justify-content:space-between;align-items:center;box-sizing:border-box;padding:0 10px;margin:18px 0 6px;gap:0;flex-shrink:0}
+.work .reps i{width:16px;height:16px;border-width:2px}
+.work .reps i.cur{transform:scale(1.35)}
+.work .mid-note{text-align:center;font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.12em;text-transform:uppercase;margin:18px 0 6px;flex-shrink:0}
+.work .half.down .fig{width:min(88vw,380px);height:100%;max-height:none;margin:0}
 .reps{display:flex;gap:7px;margin-top:20px}
 .reps i{width:9px;height:9px;border-radius:50%;border:1.5px solid currentColor;opacity:.4;box-sizing:border-box;transition:all .3s}
 .reps i.on{background:currentColor;opacity:.7}
@@ -248,15 +257,16 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .fig text{fill:currentColor;font-family:var(--display);font-weight:600;font-size:11px;letter-spacing:.16em;opacity:.45}
 
 /* ---- promemoria postura (popup a molla, mosso da JS) ---- */
-#remind{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 82px);z-index:4;display:flex;justify-content:center;pointer-events:none;padding:0 18px;--gapc:#1c1f25;--acc:var(--orange)}
-#remind .card{width:100%;max-width:440px;height:150px;box-sizing:border-box;display:grid;grid-template-columns:1fr 1px 1fr;align-items:stretch;padding:10px 6px 14px;border-radius:30px;color:var(--ink);
-  background:rgba(20,22,27,.86);-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(255,255,255,.08),0 18px 50px rgba(0,0,0,.35);
-  will-change:transform,opacity;transform-origin:50% 0}
-#remind .sep{background:rgba(255,255,255,.1);margin:10px 0}
-#remind .col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:0}
-#remind .col .fig{flex:1 1 auto;width:100%;min-height:0;max-height:200px}
-#remind .col b{font-family:var(--display);font-weight:700;font-size:clamp(17px,5.2vw,24px);letter-spacing:.06em;text-transform:uppercase;line-height:1;white-space:nowrap}
+#remind{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 82px);z-index:4;display:flex;justify-content:center;pointer-events:none;padding:0 18px;--gapc:var(--yellow);--acc:var(--dark)}
+#remind .card{width:100%;max-width:440px;height:150px;box-sizing:border-box;display:grid;grid-template-columns:1fr 2px 1fr;align-items:stretch;padding:12px 8px 16px;border-radius:34px;
+  color:var(--dark);background:var(--yellow);
+  box-shadow:0 0 0 1px rgba(0,0,0,.06),0 24px 60px rgba(0,0,0,.45),0 6px 16px rgba(0,0,0,.25);
+  will-change:transform,opacity;transform-origin:50% 50%}
+#remind .sep{background:rgba(0,0,0,.14);border-radius:1px;margin:12px 0}
+#remind .col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:0}
+#remind .col .fig{flex:1 1 auto;width:100%;min-height:0;max-height:220px}
+#remind .col .fig .bd{opacity:.5}
+#remind .col b{font-family:var(--display);font-weight:700;font-size:clamp(18px,5.6vw,26px);letter-spacing:.05em;text-transform:uppercase;line-height:1;white-space:nowrap}
 
 /* ---- come si fa (pannello dalla Home) ---- */
 #detail{position:fixed;inset:0;z-index:6;background:rgba(8,9,11,.45);display:flex;align-items:flex-end;animation:fade .25s ease-out}
@@ -718,7 +728,7 @@ const MENU_ICON = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5
 
 /* ================= Schermate ================= */
 function render(html, withFill) {
-  lastPct = null;
+  lastPct = null; lastLeft = null;
   base.innerHTML = html;
   fill.innerHTML = withFill ? html : '';
   fill.hidden = !withFill;
@@ -770,7 +780,17 @@ function paintRing(fr, root) {
   const pc = pctOf(fr);
   if (pc !== lastPct) { lastPct = pc; root.querySelectorAll('[data-pct]').forEach(n => n.textContent = pc); }
 }
-function pill(l1, l2) { const fr = fracsAt(S.i); return `<div class="pill glass"><div class="rw">${ring(fr)}<b data-pct>${pctOf(fr)}</b></div><div class="pt"><strong>${l1}</strong><small>${l2}</small></div></div>`; }
+function pill(l1, l2) { const fr = fracsAt(S.i); return `<div class="pill glass"><div class="rw">${ring(fr)}<b data-pct>${pctOf(fr)}</b></div><div class="pt"><strong data-left>${fmtLeft(secondsLeft(performance.now()))}</strong><small>${l1} · ${l2}</small></div></div>`; }
+// secondi che mancano alla fine: lavoro che resta + le pause da 5" tra un esercizio e l'altro
+function secondsLeft(now) {
+  if (S.screen !== 'work' && S.screen !== 'ready') return Math.round(TOTW + (STEPS.length - S.i - 1) * CFG.ready + CFG.ready);
+  const done = fracsAt(S.i, partialNow(now)).reduce((a, x, k) => a + x * SEGW[k], 0);
+  let left = TOTW - done + (STEPS.length - S.i - 1) * CFG.ready;
+  if (S.screen === 'ready') left += Math.max(0, CFG.ready - (S.paused ? S.dur * 1000 - S.left : now - S.t0) / 1000);
+  return Math.max(0, Math.ceil(left));
+}
+const fmtLeft = sec => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+let lastLeft = null;
 const sw = v => `<span class="swap" data-swap><span>${v}</span></span>`;
 function swapText(sel, v) {
   stage.querySelectorAll(sel).forEach(el => {
@@ -933,8 +953,8 @@ function streak() {
 function segs(n, cur) { let s = ''; for (let k = 0; k < n; k++) s += `<i class="${k < cur ? 'on' : k === cur ? 'cur' : ''}"></i>`; return `<div class="segs">${s}</div>`; }
 function repDots() { let s = ''; for (let k = 0; k < CFG.reps; k++) s += `<i class="${k < S.rep - 1 ? 'on' : k === S.rep - 1 ? 'cur' : ''}"></i>`; return s; }
 const isoPill = st => S.custom
-  ? [`Serie ${st.round} di ${STEPS.length}`, st.ex.short]
-  : [`Giro ${st.round} di ${CFG.rounds}`, `Esercizio ${st.k + 1} di ${EX.length}`];
+  ? [`Serie ${st.round}/${STEPS.length}`, st.ex.short]
+  : [`Giro ${st.round}/${CFG.rounds}`, `Esercizio ${st.k + 1}/${EX.length}`];
 const stepLabel = st => st.kind === 'iso' ? `${S.custom ? 'Serie' : 'Giro'} ${st.round} · ${st.ex.short} · ripetizione ${S.rep} di ${CFG.reps}` : `Pendolo · ${st.p.name}`;
 
 const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
@@ -974,7 +994,7 @@ function homeView() {
 }
 function readyView(st) {
   const iso = st.kind === 'iso';
-  const top = iso ? pill(...isoPill(st)) : pill('Pendolo', `${st.k + 1} di ${PEND.length}`);
+  const top = iso ? pill(...isoPill(st)) : pill('Pendolo', `${st.k + 1}/${PEND.length}`);
   const eyebrow = S.custom ? (iso && st.round > 1 ? `Serie ${st.round}` : 'Prossimo')
     : iso ? (st.k === 0 && st.round > 1 ? `Giro ${st.round} · si riparte` : 'Prossimo') : (st.k === 0 ? 'Ultima parte' : 'Prossimo');
   return `<div class="screen ready enter">
@@ -986,14 +1006,15 @@ function readyView(st) {
 function workView(st) {
   if (st.kind === 'iso') return `<div class="screen work enter">
     <div class="top">${pill(...isoPill(st))}</div>
-    <div class="center"><div class="exname">${st.ex.name}</div><div class="phase" data-phase>${sw('Spingi')}</div><div class="num big" data-num>${numSvg(CFG.push)}</div><div class="reps" data-reps>${repDots()}</div></div>
-    ${figSvg(S.fig)}
+    <div class="half up"><div class="phase" data-phase>${sw('Spingi')}</div><div class="num big" data-num>${numSvg(CFG.push)}</div></div>
+    <div class="reps" data-reps>${repDots()}</div>
+    <div class="half down">${figSvg(S.fig)}</div>
   </div>`;
   return `<div class="screen work enter">
-    <div class="top">${pill('Pendolo', `${st.k + 1} di ${PEND.length}`)}</div>
-    <div class="center"><div class="exname">Pendolo · ${st.p.name}</div><div class="phase" data-phase>${sw(st.p.mode === 'circ' ? 'Un senso' : 'Oscilla')}</div><div class="num big" data-num>${numSvg(CFG.pend)}</div></div>
-    ${figSvg(S.fig)}
-    <div class="bot"><span class="sub">Braccio morbido, spalla giù</span></div>
+    <div class="top">${pill('Pendolo', `${st.k + 1}/${PEND.length}`)}</div>
+    <div class="half up"><div class="phase" data-phase>${sw(st.p.mode === 'circ' ? 'Un senso' : 'Oscilla')}</div><div class="num big" data-num>${numSvg(CFG.pend)}</div></div>
+    <div class="mid-note sub">${st.p.name} · braccio morbido</div>
+    <div class="half down">${figSvg(S.fig)}</div>
   </div>`;
 }
 function doneView() {
@@ -1096,12 +1117,13 @@ const remindCard = remindEl.querySelector('.card');
 const rmA = document.getElementById('rmA'), rmB = document.getElementById('rmB');
 function showRemind() {
   clearTimeout(remindTimer);
-  // occupa tutto lo spazio tra la barra in alto e il numero grande
-  const pillEl = stage.querySelector('.base .pill'), numEl = stage.querySelector('.base [data-num]');
-  if (pillEl && numEl) {
-    const top = pillEl.getBoundingClientRect().bottom + 12, bottom = numEl.getBoundingClientRect().top - 14;
-    remindEl.style.top = top + 'px';
-    remindCard.style.height = Math.max(110, bottom - top) + 'px';
+  // compare al centro della metà alta, sopra il numero (tra la barra in alto e i puntini)
+  const pillEl = stage.querySelector('.base .pill'), midEl = stage.querySelector('.base .reps, .base .mid-note');
+  if (pillEl && midEl) {
+    const top = pillEl.getBoundingClientRect().bottom + 14, bottom = midEl.getBoundingClientRect().top - 10;
+    const h = Math.max(130, Math.min(280, bottom - top));
+    remindEl.style.top = (top + Math.max(0, (bottom - top - h) / 2)) + 'px';
+    remindCard.style.height = h + 'px';
   }
   remindEl.hidden = false;
   if (spr.x < .05) { spr.x = 0; spr.v = 0; remindAt = performance.now(); }
@@ -1137,14 +1159,16 @@ function remindFrame(dt, t) {
   if (remindEl.hidden) return;
   if (REDUCE) { spr.x = spr.to; spr.v = 0; }
   else {
-    // entrata: un filo di rimbalzo; uscita: più rapida e senza rimbalzo
-    const k = spr.to ? 210 : 320, c = spr.to ? 19 : 34;
+    // entrata: "pop" elastico con rimbalzo evidente; uscita: rapida e pulita
+    const k = spr.to ? 300 : 380, c = spr.to ? 15 : 38;
     for (let i = 0; i < 4; i++) { const acc = -k * (spr.x - spr.to) - c * spr.v; spr.v += acc * dt / 4; spr.x += spr.v * dt / 4; }
   }
   if (spr.to === 0 && spr.x < .02 && Math.abs(spr.v) < .2) { hideRemind(true); return; }
   const x = spr.x, out = spr.to === 0;
-  remindCard.style.transform = `translateY(${f((1 - x) * -14)}px) scale(${(.9 + .1 * x).toFixed(4)})`;
-  remindCard.style.opacity = clamp(x * 1.5);
+  remindCard.style.transform = out
+    ? `scale(${(.82 + .18 * x).toFixed(4)})`
+    : `translateY(${f((1 - x) * 30)}px) scale(${(.35 + .65 * x).toFixed(4)}) rotate(${f((1 - x) * -6)}deg)`;
+  remindCard.style.opacity = clamp(x * (out ? 1.4 : 2.5));
   remindDraw(t);
 }
 
@@ -1345,6 +1369,8 @@ function frame(now) {
   }
 
   paintRing(fracsAt(S.i, partialNow(now)), stage);
+  const lf = secondsLeft(now);
+  if (lf !== lastLeft) { lastLeft = lf; stage.querySelectorAll('[data-left]').forEach(n => n.textContent = fmtLeft(lf)); }
 
   // figura
   const st = STEPS[S.i];
