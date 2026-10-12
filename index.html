@@ -43,6 +43,15 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 
 #stage{position:fixed;inset:0;cursor:pointer;overflow:hidden}
 .layer{position:absolute;inset:0;overflow:hidden}
+/* Boa: una goccia dello stesso liquido. Sopra la superficie ha il colore del liquido,
+   sotto diventa scura come i numeri: per questo sembra fatta della stessa materia. */
+.buoy{position:absolute;left:0;top:0;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;pointer-events:none;will-change:transform;opacity:0;transition:opacity .5s ease}
+.buoy.on{opacity:1}
+.buoy i{position:absolute;inset:0;border-radius:50%}
+.layer.base .buoy{background:var(--tone);box-shadow:0 0 22px color-mix(in srgb,var(--tone) 45%,transparent)}
+.layer.base .buoy i{background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.6),rgba(255,255,255,0) 42%)}
+.layer.fill .buoy{background:var(--tink)}
+.layer.fill .buoy i{background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.22),rgba(255,255,255,0) 45%)}
 .layer.base{background:var(--bg);color:var(--ink);--gapc:var(--bg);--acc:var(--orange)}
 .layer.fill{background:var(--tone);color:var(--tink);--gapc:var(--tone);--acc:var(--tacc);clip-path:inset(100% 0 0 0);will-change:clip-path;transition:background-color .5s,color .5s}
 #stage[data-tone="ready"]{--tone:var(--ready);--tink:var(--ink);--tacc:var(--orange)}
@@ -733,9 +742,54 @@ function render(html, withFill) {
   base.innerHTML = html;
   fill.innerHTML = withFill ? html : '';
   fill.hidden = !withFill;
+  base.prepend(BUOY.el[0]); fill.prepend(BUOY.el[1]);   // la boa resta dietro a numeri, puntini e omino
+  BUOY.measure = true;
+  const want = S.screen === 'work';          // la boa c'è solo durante l'esercizio
+  BUOY.on = want; BUOY.init = false;
+  BUOY.el.forEach(e => e.classList.toggle('on', want));
   S.lastNum = null;
   paintSound();
 }
+/* ---- Boa: galleggia sull'onda durante l'esercizio, da seguire con gli occhi ----
+   - segue la superficie con una molla, si inclina con la pendenza dell'onda e rotola mentre si sposta;
+   - scivola piano da un lato all'altro;
+   - non esce mai: in alto si ferma sotto la pillola del tempo (resta sott'acqua, come una palla sotto un soffitto),
+     in basso si appoggia sul fondo. */
+const BUOY = { el: [0, 1].map(() => { const d = document.createElement('div'); d.className = 'buoy'; d.innerHTML = '<i></i>'; return d; }),
+  x: 0, y: 0, vy: 0, rot: 0, t: 0, top: 80, bottom: 0, measure: true, on: false, init: false };
+function buoyStep(dt, now) {
+  if (!BUOY.on) return;
+  const W = stage.clientWidth, H = stage.clientHeight, R = 15;
+  if (BUOY.measure) {
+    BUOY.measure = false;
+    const pill = stage.querySelector('.base .pill');
+    BUOY.top = (pill ? pill.getBoundingClientRect().bottom : 70) + 14 + R;
+    const scr = stage.querySelector('.base .screen');
+    const padB = scr ? parseFloat(getComputedStyle(scr).paddingBottom) || 22 : 22;   // include la barra in basso dell'iPhone
+    BUOY.bottom = H - padB - R + 4;
+  }
+  if (!S.paused && !REDUCE) BUOY.t += dt;
+  // deriva lenta da un lato all'altro (due onde lente sommate, così non sembra un pendolo)
+  const m = R + 22, span = (W - 2 * m) / 2;
+  const nx = W / 2 + span * (Math.sin(BUOY.t * .21) * .75 + Math.sin(BUOY.t * .53 + 1.7) * .25);
+  const dx = nx - BUOY.x; BUOY.x = nx;
+  // punto di galleggiamento: centro un po' sopra la superficie, tenuto dentro i limiti
+  const target = clamp(surfaceY(BUOY.x) - R * .3, BUOY.top, BUOY.bottom);   // circa due terzi fuori dall'acqua
+  if (!BUOY.init) { BUOY.init = true; BUOY.y = target; BUOY.vy = 0; }
+  if (REDUCE) BUOY.y = target;
+  else {
+    const k = 70, c = 11;
+    for (let i = 0; i < 3; i++) { const acc = -k * (BUOY.y - target) - c * BUOY.vy; BUOY.vy += acc * dt / 3; BUOY.y += BUOY.vy * dt / 3; }
+    BUOY.y = clamp(BUOY.y, BUOY.top, BUOY.bottom);
+  }
+  // inclinazione con la pendenza dell'onda + rotolamento mentre scivola
+  const slope = (surfaceY(BUOY.x + 6) - surfaceY(BUOY.x - 6)) / 12;
+  BUOY.rot += dx / R;
+  const tilt = Math.atan(slope) * .8 + BUOY.rot * .35;
+  const tr = `translate(${f(BUOY.x)}px,${f(BUOY.y)}px) rotate(${f(tilt * 180 / Math.PI)}deg)`;
+  BUOY.el[0].style.transform = tr; BUOY.el[1].style.transform = tr;
+}
+function buoySplash() { if (BUOY.on && !REDUCE) BUOY.vy -= 140; }
 // Tutti i disegni mostrano il braccio SINISTRO: le viste di lato e dall'alto sono specchiate.
 const figSvg = fig => { const v = fig.vb || [0, 0, 200, 200]; return `<svg class="fig" viewBox="${v.join(' ')}" aria-hidden="true"><text x="${v[0] + 2}" y="${v[1] + v[3] * .05}" style="font-size:${f(v[3] * .055)}px">${fig.lab} · SINISTRO</text><g${fig.mirror ? ' transform="translate(200 0) scale(-1 1)"' : ''}>${fig.still}<g class="dyn"></g></g></svg>`; };
 /* ---- avanzamento della sessione: 3 segmenti per i giri + 1 per il pendolo, proporzionali al tempo ---- */
@@ -1097,7 +1151,7 @@ function advance() {
   if (S.screen === 'ready') return beginWork(end);
   const st = STEPS[S.i];
   if (st.kind === 'pend') return nextStep(end);
-  S.slosh = 1;
+  S.slosh = 1; buoySplash();
   if (S.phase === 'push') {
     if (S.rep >= CFG.reps) return nextStep(end);
     S.phase = 'rest'; S.t0 = end; S.dur = CFG.rest; stage.dataset.tone = 'rest';
@@ -1235,20 +1289,28 @@ document.addEventListener('visibilitychange', () => {
 
 /* ================= Animazione ================= */
 let lastT = performance.now();
+// ultima onda disegnata: serve alla boa per sapere dov'è la superficie
+const WAVE = { p: 0, y: 0, A: 0, now: 0, W: 1, H: 1 };
+const waveAt = (u, now) => Math.sin(u * Math.PI * 2.2 + now / 520) * .75 + Math.sin(u * Math.PI * 4.1 - now / 830) * .25;
+function surfaceY(x) {
+  if (WAVE.p <= .0005) return WAVE.H + 40;
+  return WAVE.y + WAVE.A * waveAt(x / WAVE.W, WAVE.now);
+}
 function setFill(p, now) {
   const H = stage.clientHeight, W = stage.clientWidth;
+  WAVE.p = p; WAVE.y = H * (1 - p); WAVE.A = 0; WAVE.now = now; WAVE.W = W; WAVE.H = H;
   if (p <= .0005) { fill.style.clipPath = 'inset(100% 0 0 0)'; return; }
   const idle = S.paused && S.screen !== 'done';
   if (p >= .9995 && S.slosh < .02 && !idle) { fill.style.clipPath = 'inset(0 0 0 0)'; return; }
   const y = H * (1 - p);
   let A = REDUCE ? 0 : 8 * Math.sin(Math.PI * Math.min(1, p * 1.4)) + 16 * S.slosh;
   if (idle && !REDUCE) A = Math.max(A, 7);   // in pausa: onda lenta, come acqua ferma che respira
+  WAVE.A = A;
   const N = 24;
   let pts = `0px ${H}px,${W}px ${H}px`;
   for (let k = N; k >= 0; k--) {
     const u = k / N;
-    const w = Math.sin(u * Math.PI * 2.2 + now / 520) * .75 + Math.sin(u * Math.PI * 4.1 - now / 830) * .25;
-    pts += `,${f(u * W)}px ${f(y + A * w)}px`;
+    pts += `,${f(u * W)}px ${f(y + A * waveAt(u, now))}px`;
   }
   fill.style.clipPath = `polygon(${pts})`;
 }
@@ -1331,6 +1393,7 @@ function frame(now) {
   const p = clamp(e / (S.dur * 1000));
   S.slosh *= Math.exp(-dt * 2.6);
   setFill(S.phase === 'rest' ? 1 - p : p, now);
+  buoyStep(dt, now);
 
   const remain = Math.max(1, Math.ceil(S.dur - e / 1000));
   if (remain !== S.lastNum) {
