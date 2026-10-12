@@ -253,7 +253,8 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .fig .guide{stroke:var(--acc);stroke-width:2;stroke-dasharray:1 7;opacity:.6;fill:none}
 .fig .ring{fill:none;stroke:var(--acc);stroke-width:2.5}
 .fig .glow{fill:var(--acc)}
-.fig text{fill:currentColor;font-family:var(--display);font-weight:600;font-size:11px;letter-spacing:.16em;opacity:.45}
+/* nessuna scritta sopra i disegni ("di lato · sinistro" ecc.), in nessuna schermata */
+.fig text{display:none}
 
 /* ---- promemoria postura (popup a molla, mosso da JS) ---- */
 #remind{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 82px);z-index:4;display:flex;justify-content:center;pointer-events:none;padding:0 18px;--gapc:var(--yellow);--acc:var(--dark)}
