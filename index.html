@@ -781,17 +781,17 @@ function paintRing(fr, root) {
   const pc = pctOf(fr);
   if (pc !== lastPct) { lastPct = pc; root.querySelectorAll('[data-pct]').forEach(n => n.textContent = pc); }
 }
-function pill(l1, l2) { const fr = fracsAt(S.i); return `<div class="pill glass"><div class="rw">${ring(fr)}<b data-pct>${pctOf(fr)}</b></div><div class="pt"><strong data-left>${fmtLeft(secondsLeft(performance.now()))}</strong><small>${l1} · ${l2}</small></div></div>`; }
+function pill(l1, l2) { const fr = fracsAt(S.i); return `<div class="pill glass"><div class="rw">${ring(fr)}<b data-pct>${pctOf(fr)}</b></div><div class="pt"><strong data-left>${fmtLeft(secondsLeft(performance.now(), DG_MS * .5))}</strong><small>${l1} · ${l2}</small></div></div>`; }
 // secondi che mancano alla fine: lavoro che resta + le pause da 5" tra un esercizio e l'altro
 // Tempo che manca alla fine, calcolato in millisecondi esatti a partire dallo STESSO istante
 // del numero grande dell'esercizio: così i due timer scattano insieme, senza scarti di arrotondamento.
-function secondsLeft(now) {
+function secondsLeft(now, shift = 0) {
   const P = CFG.push * 1000, Rr = CFG.rest * 1000, RD = CFG.ready * 1000;
   const stepMs = st => stepW(st) * 1000;
   const i = Math.min(S.i, STEPS.length - 1);
   let ms = 0;
   for (let j = i + 1; j < STEPS.length; j++) ms += RD + stepMs(STEPS[j]);   // ogni esercizio successivo ha i suoi 5" prima
-  const eMs = S.paused ? S.dur * 1000 - S.left : now - S.t0;
+  const eMs = (S.paused ? S.dur * 1000 - S.left : now - S.t0) - shift;
   const st = STEPS[i];
   if (S.screen === 'ready') ms += Math.max(0, RD - eMs) + stepMs(st);
   else if (S.screen === 'work') {
@@ -1351,7 +1351,9 @@ function frame(now) {
   }
 
   paintRing(fracsAt(S.i, partialNow(now)), stage);
-  const lf = secondsLeft(now);
+  // il numero grande impiega DG_MS per trasformarsi nella cifra nuova: il tempo in alto scatta
+  // a metà trasformazione, quando la cifra nuova si riconosce, così all'occhio cambiano insieme
+  const lf = secondsLeft(now, DG_MS * .5);
   if (lf !== lastLeft) { lastLeft = lf; stage.querySelectorAll('[data-left]').forEach(n => n.textContent = fmtLeft(lf)); }
 
   // figura
