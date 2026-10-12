@@ -201,6 +201,7 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 /* ---- work ---- */
 .work .center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:0}
 .phase{font-family:var(--display);font-weight:700;font-size:30px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:8px;padding-left:.22em;text-align:center}
+.ready .top,.work .top{justify-content:center}
 .work .half{flex:1 1 0;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .work .half.up{justify-content:flex-end;padding-bottom:4px}
 .work .num.big{font-size:min(66vw,30vh,330px)}
@@ -1204,7 +1205,6 @@ document.addEventListener('click', e => {
   if (e.isTrusted && (e.target.closest('button') || S.screen === 'ready' || S.screen === 'work')) haptic();
   const b = e.target.closest('[data-act]');
   const act = b && b.dataset.act, now = performance.now();
-  if (act === 'start' || act === 'resumeSession' || act === 'runOne') enableTilt();
   if (act === 'start') { usePlan(fullPlan()); S.worked = 0; S.fromI = 0; workClock = 0; nextRemind = rand(8, 18); S.startedAt = now; keepAwake(); return goStep(0, now); }
   if (act === 'resumeSession') { usePlan(fullPlan()); const pi = store.get('spalla.progress', { i: 0 }).i; S.worked = 1; S.fromI = pi; S.startedAt = now; keepAwake(); return goStep(pi, now); }
   if (act === 'home') return goHome();
@@ -1235,40 +1235,11 @@ document.addEventListener('visibilitychange', () => {
 
 /* ================= Animazione ================= */
 let lastT = performance.now();
-/* Inclinazione: leggo il sensore del telefono (gamma = inclinazione destra/sinistra) e tengo
-   la superficie del liquido in piano rispetto al pavimento, come l'acqua in un bicchiere.
-   Una piccola molla fa "oscillare" il liquido quando muovi il telefono. Su iPhone serve il permesso,
-   che chiedo al primo tocco su Inizia; se non c'è il sensore o il permesso, l'onda resta dritta. */
-const TILT = { target: 0, ang: 0, v: 0, on: false, asked: false };
-function onOrient(e) {
-  if (e.gamma == null) return;
-  const so = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
-  if (so !== 0) { TILT.target = 0; return; }                      // l'app è pensata in verticale
-  TILT.target = clamp(-e.gamma, -40, 40) * D;
-}
-function enableTilt() {
-  if (TILT.asked) return; TILT.asked = true;
-  const on = () => { if (!TILT.on) { TILT.on = true; addEventListener('deviceorientation', onOrient); } };
-  try {
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      DeviceOrientationEvent.requestPermission().then(r => { if (r === 'granted') on(); }).catch(() => {});
-    } else if ('DeviceOrientationEvent' in window) on();
-  } catch {}
-}
-function tiltStep(dt) {
-  if (!TILT.on || REDUCE) { TILT.ang = 0; return; }
-  // molla un po' morbida: il liquido insegue l'inclinazione e si assesta con un piccolo dondolio
-  const k = 60, c = 9;
-  for (let i = 0; i < 3; i++) { const acc = -k * (TILT.ang - TILT.target) - c * TILT.v; TILT.v += acc * dt / 3; TILT.ang += TILT.v * dt / 3; }
-  S.slosh = Math.max(S.slosh, Math.min(.6, Math.abs(TILT.v) * .25));  // muovendolo, l'onda si agita un po'
-}
-
 function setFill(p, now) {
   const H = stage.clientHeight, W = stage.clientWidth;
   if (p <= .0005) { fill.style.clipPath = 'inset(100% 0 0 0)'; return; }
   const idle = S.paused && S.screen !== 'done';
-  const slope = Math.tan(TILT.ang);
-  if (p >= .9995 && S.slosh < .02 && !idle && Math.abs(slope) < .01) { fill.style.clipPath = 'inset(0 0 0 0)'; return; }
+  if (p >= .9995 && S.slosh < .02 && !idle) { fill.style.clipPath = 'inset(0 0 0 0)'; return; }
   const y = H * (1 - p);
   let A = REDUCE ? 0 : 8 * Math.sin(Math.PI * Math.min(1, p * 1.4)) + 16 * S.slosh;
   if (idle && !REDUCE) A = Math.max(A, 7);   // in pausa: onda lenta, come acqua ferma che respira
@@ -1277,7 +1248,7 @@ function setFill(p, now) {
   for (let k = N; k >= 0; k--) {
     const u = k / N;
     const w = Math.sin(u * Math.PI * 2.2 + now / 520) * .75 + Math.sin(u * Math.PI * 4.1 - now / 830) * .25;
-    pts += `,${f(u * W)}px ${f(y + A * w + (u * W - W / 2) * slope)}px`;
+    pts += `,${f(u * W)}px ${f(y + A * w)}px`;
   }
   fill.style.clipPath = `polygon(${pts})`;
 }
@@ -1341,7 +1312,6 @@ function frame(now) {
   const t = now / 1000;
   remindFrame(dt, t);
   morphFrame(now);
-  tiltStep(dt);
 
   if (S.screen === 'done') {
     const p = ease(clamp((now - S.doneAt) / 1400));
