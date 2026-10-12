@@ -1370,6 +1370,20 @@ requestAnimationFrame(frame);
 })();
 </script>
 
-<script>if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));</script>
+<script>
+// Aggiornamenti: a ogni riapertura controllo se su GitHub c'è una versione nuova.
+// Se arriva e sei nella Home la carico subito; se sei a metà esercizio aspetto che torni alla Home.
+if ('serviceWorker' in navigator) addEventListener('load', () => {
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+    const check = () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); };
+    document.addEventListener('visibilitychange', check);
+    setInterval(check, 30 * 60 * 1000);
+  }).catch(() => {});
+  let pending = false;
+  const reloadIfHome = () => { if (document.querySelector('.screen.home') && !document.querySelector('#detail:not([hidden])')) location.reload(); else pending = true; };
+  navigator.serviceWorker.addEventListener('controllerchange', reloadIfHome);
+  setInterval(() => { if (pending) reloadIfHome(); }, 2000);
+});
+</script>
 </body>
 </html>
