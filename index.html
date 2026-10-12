@@ -258,17 +258,16 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .fig text{fill:currentColor;font-family:var(--display);font-weight:600;font-size:11px;letter-spacing:.16em;opacity:.45}
 
 /* ---- promemoria postura (popup a molla, mosso da JS) ---- */
-/* Promemoria in stile Dynamic Island: nasce come la pillola nera della fotocamera,
-   si allarga con una molla (piccolo rimbalzo) e poi si richiude dentro di lei. */
-#remind{position:fixed;left:0;right:0;top:max(8px,calc(env(safe-area-inset-top,0px) - 48px));z-index:7;display:flex;justify-content:center;pointer-events:none;--gapc:#000;--acc:#ffd60a}
-#remind .card{width:126px;height:37px;border-radius:19px;background:#000;color:#f3efe8;overflow:hidden;position:relative;
-  box-shadow:0 18px 50px rgba(0,0,0,.5),0 0 0 .5px rgba(255,255,255,.06);will-change:width,height}
-#remind .in{position:absolute;left:0;right:0;bottom:0;height:var(--ih,190px);display:grid;grid-template-columns:1fr 1px 1fr;align-items:stretch;padding:14px 10px 18px;box-sizing:border-box;opacity:0;will-change:opacity,transform,filter}
-#remind .sep{background:rgba(255,255,255,.12);margin:14px 0}
+#remind{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 82px);z-index:4;display:flex;justify-content:center;pointer-events:none;padding:0 18px;--gapc:var(--yellow);--acc:var(--dark)}
+#remind .card{width:100%;max-width:440px;height:150px;box-sizing:border-box;display:grid;grid-template-columns:1fr 2px 1fr;align-items:stretch;padding:12px 8px 16px;border-radius:34px;
+  color:var(--dark);background:var(--yellow);
+  box-shadow:0 0 0 1px rgba(0,0,0,.06),0 24px 60px rgba(0,0,0,.45),0 6px 16px rgba(0,0,0,.25);
+  will-change:transform,opacity;transform-origin:50% 50%}
+#remind .sep{background:rgba(0,0,0,.14);border-radius:1px;margin:12px 0}
 #remind .col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:0}
-#remind .col .fig{flex:1 1 auto;width:100%;min-height:0;max-height:200px}
+#remind .col .fig{flex:1 1 auto;width:100%;min-height:0;max-height:220px}
 #remind .col .fig .bd{opacity:.5}
-#remind .col b{font-family:var(--display);font-weight:700;font-size:clamp(17px,5.2vw,23px);letter-spacing:.06em;text-transform:uppercase;line-height:1;white-space:nowrap}
+#remind .col b{font-family:var(--display);font-weight:700;font-size:clamp(18px,5.6vw,26px);letter-spacing:.05em;text-transform:uppercase;line-height:1;white-space:nowrap}
 
 /* ---- come si fa (pannello dalla Home) ---- */
 #detail{position:fixed;inset:0;z-index:6;background:rgba(8,9,11,.45);display:flex;align-items:flex-end;animation:fade .25s ease-out}
@@ -337,11 +336,11 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
   <div class="layer fill" hidden></div>
 </div>
 <div id="remind" hidden aria-live="polite">
-  <div class="card"><div class="in">
+  <div class="card">
     <div class="col"><svg class="fig" viewBox="0 0 80 80" aria-hidden="true"><g id="rmA"></g></svg><b>Ascella attaccata</b></div>
     <div class="sep"></div>
     <div class="col"><svg class="fig" viewBox="0 0 80 80" aria-hidden="true"><g id="rmB"></g></svg><b>Petto in fuori</b></div>
-  </div></div>
+  </div>
 </div>
 <div id="detail" hidden>
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="dTitle">
@@ -644,50 +643,39 @@ hap.innerHTML = '<input type="checkbox" switch tabindex="-1">';
 document.body.appendChild(hap);
 function haptic() { try { if (navigator.vibrate) navigator.vibrate(12); else hap.click(); } catch {} }
 const buzz = p => { try { if (navigator.vibrate) navigator.vibrate(p); else hap.click(); } catch {} };
-// Voce umana sintetizzata (sintesi a formanti): un "ronzio" come quello delle corde vocali
-// e un soffio di fiato, passati in filtri che imitano la forma della bocca su una vocale.
+// Sforzo: un ringhio basso che sale e trema, come quando stringi i denti.
+function strain() {
+  if (!ac || !S.sound) return;
+  try {
+    const t = ac.currentTime, o = ac.createOscillator(), o2 = ac.createOscillator(), lfo = ac.createOscillator(), ld = ac.createGain();
+    const flt = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(92, t); o.frequency.exponentialRampToValueAtTime(150, t + .45);
+    o2.type = 'square'; o2.frequency.setValueAtTime(138, t); o2.frequency.exponentialRampToValueAtTime(225, t + .45);
+    lfo.frequency.value = 17; ld.gain.value = 5; lfo.connect(ld); ld.connect(o.frequency); ld.connect(o2.frequency);
+    flt.type = 'lowpass'; flt.Q.value = 7; flt.frequency.setValueAtTime(380, t); flt.frequency.linearRampToValueAtTime(1500, t + .42);
+    const g2 = ac.createGain(); g2.gain.value = .35;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.34, t + .05); g.gain.setValueAtTime(.3, t + .36); g.gain.exponentialRampToValueAtTime(.0001, t + .6);
+    o.connect(flt); o2.connect(g2).connect(flt); flt.connect(g).connect(ac.destination);
+    [o, o2, lfo].forEach(n => { n.start(t); n.stop(t + .65); });
+  } catch {}
+}
+// Rilassamento: un respiro che esce (soffio che scende) con una nota calda sotto.
 let noiseBuf = null;
-function voice(o) {
+function exhale() {
   if (!ac || !S.sound) return;
   try {
     const t = ac.currentTime;
-    if (!noiseBuf) { noiseBuf = ac.createBuffer(1, ac.sampleRate * 1.5, ac.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
-    const out = ac.createGain(), lp = ac.createBiquadFilter(), env = ac.createGain(), bus = ac.createGain();
-    out.gain.value = o.vol; lp.type = 'lowpass'; lp.frequency.value = 4200;
-    env.connect(lp); lp.connect(out); out.connect(ac.destination);
-    env.gain.setValueAtTime(0, t); env.gain.linearRampToValueAtTime(1, t + o.attack);
-    env.gain.setValueAtTime(1, t + o.hold); env.gain.exponentialRampToValueAtTime(.0001, t + o.dur);
-    // bocca: tre formanti della vocale (con eventuale "n" iniziale che si apre)
-    o.formants.forEach(([fq, q, g, from]) => {
-      const bp = ac.createBiquadFilter(), gg = ac.createGain();
-      bp.type = 'bandpass'; bp.Q.value = q;
-      if (from) { bp.frequency.setValueAtTime(from, t); bp.frequency.exponentialRampToValueAtTime(fq, t + .1); } else bp.frequency.value = fq;
-      gg.gain.value = g; bus.connect(bp); bp.connect(gg); gg.connect(env);
-    });
-    const stop = t + o.dur + .05;
-    if (o.voiced) {   // corde vocali: dente di sega con un po' di vibrato e, nello sforzo, un tremolio teso
-      const osc = ac.createOscillator(), vg = ac.createGain(), vib = ac.createOscillator(), vd = ac.createGain();
-      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(o.f0a, t); osc.frequency.exponentialRampToValueAtTime(o.f0b, t + o.dur * .85);
-      vib.frequency.value = 5.5; vd.gain.value = o.vib; vib.connect(vd); vd.connect(osc.frequency);
-      vg.gain.value = o.voiced; osc.connect(vg); vg.connect(bus);
-      if (o.fry) { const am = ac.createOscillator(), ad = ac.createGain(); am.frequency.value = o.fry; ad.gain.value = o.voiced * .45; am.connect(ad); ad.connect(vg.gain); am.start(t); am.stop(stop); }
-      osc.start(t); osc.stop(stop); vib.start(t); vib.stop(stop);
-    }
-    if (o.breath) {   // fiato
-      const n = ac.createBufferSource(), ng = ac.createGain();
-      n.buffer = noiseBuf; ng.gain.value = o.breath; n.connect(ng); ng.connect(bus); n.start(t); n.stop(stop);
-    }
+    if (!noiseBuf) { noiseBuf = ac.createBuffer(1, ac.sampleRate * 1.2, ac.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+    const n = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain();
+    n.buffer = noiseBuf; bp.type = 'bandpass'; bp.Q.value = 1.4;
+    bp.frequency.setValueAtTime(1500, t); bp.frequency.exponentialRampToValueAtTime(320, t + .95);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.42, t + .12); g.gain.exponentialRampToValueAtTime(.0001, t + 1.05);
+    n.connect(bp).connect(g).connect(ac.destination); n.start(t); n.stop(t + 1.1);
+    const o = ac.createOscillator(), og = ac.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(392, t); o.frequency.exponentialRampToValueAtTime(294, t + .9);
+    og.gain.setValueAtTime(0, t); og.gain.linearRampToValueAtTime(.12, t + .15); og.gain.exponentialRampToValueAtTime(.0001, t + 1);
+    o.connect(og).connect(ac.destination); o.start(t); o.stop(t + 1.05);
   } catch {}
-}
-// Sforzo: "nnhh!" corto e teso, che sale (vocale "u" aperta, con la "n" che si apre all'inizio)
-function strain() {
-  voice({ vol: 2.6, f0a: 102, f0b: 138, dur: .58, attack: .035, hold: .34, voiced: 1, breath: .35, fry: 27, vib: 3,
-    formants: [[600, 6, 1, 280], [1080, 8, .55, 1500], [2450, 10, .22]] });
-}
-// Rilassa: "haaah", un sospiro pieno di fiato che scende (vocale "a")
-function exhale() {
-  voice({ vol: 2.2, f0a: 150, f0b: 92, dur: 1.2, attack: .14, hold: .22, voiced: .22, breath: 1, vib: 1.5,
-    formants: [[760, 3, 1], [1180, 4, .6], [2500, 6, .22]] });
 }
 // Promemoria: due tic secchi e brevissimi, diversi da tutto il resto.
 function tic(freq, delay) {
@@ -1126,15 +1114,18 @@ function advance() {
 const rand = (a, b) => a + Math.random() * (b - a);
 let workClock = 0, nextRemind = rand(8, 18), remindTimer = 0, remindAt = 0;
 const spr = { x: 0, v: 0, to: 0 };
-const ISL = { w: 360, h: 200, w0: 126, h0: 37 };   // pillola chiusa → isola aperta
 const remindCard = remindEl.querySelector('.card');
 const rmA = document.getElementById('rmA'), rmB = document.getElementById('rmB');
 function showRemind() {
   clearTimeout(remindTimer);
-  // dimensione finale dell'isola aperta: quasi tutta la larghezza, alta circa un quarto di schermo
-  ISL.w = Math.min(stage.clientWidth - 20, 420);
-  ISL.h = Math.max(170, Math.min(230, stage.clientHeight * .27));
-  remindEl.querySelector('.in').style.setProperty('--ih', ISL.h + 'px');
+  // compare al centro della metà alta, sopra il numero (tra la barra in alto e i puntini)
+  const pillEl = stage.querySelector('.base .pill'), midEl = stage.querySelector('.base .reps, .base .mid-note');
+  if (pillEl && midEl) {
+    const top = pillEl.getBoundingClientRect().bottom + 14, bottom = midEl.getBoundingClientRect().top - 10;
+    const h = Math.max(130, Math.min(280, bottom - top));
+    remindEl.style.top = (top + Math.max(0, (bottom - top - h) / 2)) + 'px';
+    remindCard.style.height = h + 'px';
+  }
   remindEl.hidden = false;
   if (spr.x < .05) { spr.x = 0; spr.v = 0; remindAt = performance.now(); }
   spr.to = 1;
@@ -1169,23 +1160,16 @@ function remindFrame(dt, t) {
   if (remindEl.hidden) return;
   if (REDUCE) { spr.x = spr.to; spr.v = 0; }
   else {
-    // apertura: molla con un piccolo rimbalzo; chiusura: molla senza rimbalzo, più secca
-    const k = spr.to ? 190 : 300, c = spr.to ? 17 : 35;
+    // entrata: "pop" elastico con rimbalzo evidente; uscita: rapida e pulita
+    const k = spr.to ? 300 : 380, c = spr.to ? 15 : 38;
     for (let i = 0; i < 4; i++) { const acc = -k * (spr.x - spr.to) - c * spr.v; spr.v += acc * dt / 4; spr.x += spr.v * dt / 4; }
   }
   if (spr.to === 0 && spr.x < .02 && Math.abs(spr.v) < .2) { hideRemind(true); return; }
   const x = spr.x, out = spr.to === 0;
-  // l'isola cresce in larghezza un filo prima che in altezza, come quella vera
-  const xw = Math.min(1.08, x * 1.12), xh = x;
-  remindCard.style.width = f(ISL.w0 + (ISL.w - ISL.w0) * xw) + 'px';
-  remindCard.style.height = f(ISL.h0 + (ISL.h - ISL.h0) * Math.max(0, xh)) + 'px';
-  remindCard.style.borderRadius = f(18.5 + (44 - 18.5) * clamp(x)) + 'px';
-  remindCard.style.opacity = clamp(x / .06);              // nasce dal nero della fotocamera
-  // il contenuto compare solo quando l'isola è quasi aperta, mettendosi a fuoco
-  const c = clamp((x - (out ? .45 : .62)) / .3), inn = remindCard.firstElementChild;
-  inn.style.opacity = c;
-  inn.style.transform = `scale(${(.92 + .08 * c).toFixed(3)})`;
-  inn.style.filter = c < .99 ? `blur(${f((1 - c) * 8)}px)` : 'none';
+  remindCard.style.transform = out
+    ? `scale(${(.82 + .18 * x).toFixed(4)})`
+    : `translateY(${f((1 - x) * 30)}px) scale(${(.35 + .65 * x).toFixed(4)}) rotate(${f((1 - x) * -6)}deg)`;
+  remindCard.style.opacity = clamp(x * (out ? 1.4 : 2.5));
   remindDraw(t);
 }
 
