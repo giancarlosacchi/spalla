@@ -7,13 +7,13 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Spalla">
-<meta name="theme-color" content="#0e1013">
+<meta name="theme-color" content="#000000">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <title>Spalla</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: one full-screen stage. A liquid fill rises from the bottom as the timer;
    every screen is drawn twice (base + fill layer) and the fill layer is clipped,
@@ -66,8 +66,8 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 
 /* vetro: tinta presa dal colore del testo, cosi funziona sia sul nero che sul liquido */
 .glass{background:color-mix(in srgb,currentColor 8%,transparent);
-  box-shadow:inset 0 0 0 1px color-mix(in srgb,currentColor 11%,transparent),inset 0 1px 0 color-mix(in srgb,currentColor 20%,transparent);
-  -webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+  
+  }
 
 /* anello di avanzamento: 3 giri + pendolo */
 .ring{display:block;flex-shrink:0;overflow:visible}
@@ -91,7 +91,7 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .sw-in{animation:swIn .22s ease-out both}
 @keyframes swIn{from{opacity:.35}}
 .sub{opacity:.6}
-.eyebrow{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;opacity:.6}
+
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.1em;text-transform:uppercase;min-height:44px}
 .icon{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;transition:transform .15s}
 .icon:active{transform:scale(.9)}
@@ -120,8 +120,8 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .week .d span{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.08em;color:var(--muted)}
 .week .d.today span{color:var(--ink)}
 .plan{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-.plan li{display:grid;grid-template-columns:26px 1fr auto;align-items:baseline;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);font-size:17px;font-weight:500}
-.plan li:first-child{border-top:1px solid var(--line)}
+.plan li{display:grid;grid-template-columns:26px 1fr auto;align-items:baseline;gap:10px;padding:12px 0;font-size:17px;font-weight:500}
+.plan li:first-child{}
 .plan .n{font-family:var(--display);font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
 .plan .t{font-family:var(--display);font-size:16px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .plan li.pend .n{color:var(--blue)}
@@ -130,7 +130,7 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .actions{margin-top:auto;display:flex;flex-direction:column;gap:10px;flex-shrink:0;padding-top:4px}
 .go{display:block;width:100%;min-height:64px;border-radius:20px;background:var(--orange);color:var(--dark);font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.1em;text-transform:uppercase;flex-shrink:0;transition:transform .15s}
 .go:active,.ghost:active{transform:scale(.97)}
-.ghost{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:64px;border-radius:20px;background:var(--panel);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),inset 0 1px 0 rgba(255,255,255,.08);padding:0 18px 0 10px;box-sizing:border-box;font-weight:600;font-size:16px;transition:transform .15s;text-align:left;gap:10px}
+.ghost{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:64px;border-radius:20px;background:var(--panel);padding:0 18px 0 10px;box-sizing:border-box;font-weight:600;font-size:16px;transition:transform .15s;text-align:left;gap:10px}
 .ghost small{display:block;font-weight:500;color:var(--muted);font-size:14px}
 .ghost .gl{display:flex;align-items:center;gap:12px;min-width:0}
 .ghost .ring{width:44px;height:44px}
@@ -142,11 +142,11 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
    si divide in parti uguali tra i blocchi, così resta equilibrata su ogni iPhone. ---- */
 .home{gap:0;padding-bottom:0;justify-content:space-between;align-items:stretch}
 .home .h-top{display:flex;flex-direction:column;justify-content:flex-start;align-items:center;text-align:center;gap:4px;padding-top:6px}
-.h-top .eyebrow{text-transform:uppercase}
+.h-top 
 .home .h-top h1{font-size:clamp(46px,13vw,64px);margin:0;line-height:.9}
 .h-mid{display:flex;flex-direction:column;align-items:center;margin-top:16px}
 .h-hero{position:relative;isolation:isolate;width:clamp(128px,min(42vw,22vh),196px);aspect-ratio:1;flex-shrink:0}
-.h-hero::before{content:"";position:absolute;inset:-30%;z-index:-1;border-radius:50%;background:radial-gradient(closest-side,rgba(255,106,26,.22),rgba(255,106,26,.06) 55%,transparent);animation:glow 6s ease-in-out infinite}
+.h-hero::before{content:"";position:absolute;inset:-30%;z-index:-1;border-radius:50%;animation:glow 6s ease-in-out infinite}
 @keyframes glow{50%{transform:scale(1.08);opacity:.7}}
 .h-hero .ring{width:100%;height:100%}
 .h-hero .ring circle{stroke-width:3}
@@ -162,7 +162,7 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .h-sec span:first-child{color:var(--ink)}
 .h-sec span:last-child{color:var(--muted)}
 .h-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:8px}
-.pc{cursor:pointer;transition:transform .2s cubic-bezier(.3,1.4,.4,1);position:relative;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;align-items:center;gap:2px;padding:6px 4px 9px;border-radius:18px;background:var(--panel);--gapc:var(--panel);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.06);min-width:0;aspect-ratio:1/1.12;overflow:hidden}
+.pc{cursor:pointer;transition:transform .2s cubic-bezier(.3,1.4,.4,1);position:relative;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;align-items:center;gap:2px;padding:6px 4px 9px;border-radius:18px;background:var(--panel);--gapc:var(--panel);min-width:0;aspect-ratio:1/1.12;overflow:hidden}
 .pc:active{transform:scale(.95)}
 .pc .fig{width:100%;height:100%;min-height:0}
 .pc .floor{display:none}
@@ -173,15 +173,15 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .pc.pd .fig{position:absolute;left:0;right:0;top:6px;width:100%;height:calc(100% - 30px)}
 .pc.pd b{position:absolute;left:0;right:0;bottom:9px;text-align:center}
 .pc.pd b{color:var(--blue)}
-.home .actions{position:sticky;bottom:0;margin:18px -22px 0;padding:10px 22px calc(env(safe-area-inset-bottom,0px) + 20px);background:linear-gradient(to bottom,transparent,var(--bg) 30%);display:flex;flex-direction:row;align-items:stretch;gap:10px}
+.home .actions{position:sticky;bottom:0;margin:18px -22px 0;padding:10px 22px calc(env(safe-area-inset-bottom,0px) + 20px);display:flex;flex-direction:row;align-items:stretch;gap:10px}
 .home .go{flex:1 1 auto;width:auto;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:12px}
 .home .go svg{width:24px;height:24px;flex-shrink:0}
 .home .go small{font-family:var(--body);font-weight:600;font-size:14px;letter-spacing:0;text-transform:none;opacity:.7}
-.home .go::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.4) 50%,transparent 65%);transform:translateX(-120%);animation:shine 5s ease-in-out 1.4s infinite}
+.home .go::after{content:"";position:absolute;inset:0;transform:translateX(-120%);animation:shine 5s ease-in-out 1.4s infinite}
 @keyframes shine{0%{transform:translateX(-120%)}28%,100%{transform:translateX(120%)}}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1 1 auto}
 .two .go{flex-direction:column;gap:3px;min-height:70px;font-size:24px}
-.go.alt{background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 1px 0 rgba(255,255,255,.08)}
+.go.alt{background:var(--panel);color:var(--ink);}
 .home .go.alt::after{display:none}
 
 /* ---- ready ---- */
@@ -212,7 +212,7 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 .work .mid-note{text-align:center;font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.12em;text-transform:uppercase;margin:18px 0 6px;flex-shrink:0}
 .work .half.down .fig{width:min(88vw,380px);height:100%;max-height:none;margin:0}
 .reps{display:flex;gap:7px;margin-top:20px}
-.reps i{width:9px;height:9px;border-radius:50%;border:1.5px solid currentColor;opacity:.4;box-sizing:border-box;transition:all .3s}
+.reps i{width:9px;height:9px;border-radius:50%;border:1.5px solid currentColor;opacity:.4;box-sizing:border-box;transition:transform .3s,opacity .3s,background-color .3s}
 .reps i.on{background:currentColor;opacity:.7}
 .reps i.cur{background:currentColor;opacity:1;transform:scale(1.3)}
 .work .fig{width:min(70vw,280px);height:auto;max-height:30vh;align-self:center;margin-bottom:10px}
@@ -262,7 +262,7 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 #remind{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 82px);z-index:4;display:flex;justify-content:center;pointer-events:none;padding:0 18px;--gapc:var(--yellow);--acc:var(--dark)}
 #remind .card{width:100%;max-width:440px;height:150px;box-sizing:border-box;display:grid;grid-template-columns:1fr 2px 1fr;align-items:stretch;padding:12px 8px 16px;border-radius:34px;
   color:var(--dark);background:var(--yellow);
-  box-shadow:0 0 0 1px rgba(0,0,0,.06),0 24px 60px rgba(0,0,0,.45),0 6px 16px rgba(0,0,0,.25);
+  
   will-change:transform,opacity;transform-origin:50% 50%}
 #remind .sep{background:rgba(0,0,0,.14);border-radius:1px;margin:12px 0}
 #remind .col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:0}
@@ -273,28 +273,28 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 /* ---- come si fa (pannello dalla Home) ---- */
 #detail{position:fixed;inset:0;z-index:6;background:rgba(8,9,11,.45);display:flex;align-items:flex-end;animation:fade .25s ease-out}
 #detail .panel{position:relative;width:100%;box-sizing:border-box;padding:22px 22px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;gap:10px;color:var(--ink);
-  background:rgba(26,29,35,.72);-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 -10px 40px rgba(0,0,0,.4);border-radius:34px 34px 0 0;animation:up .5s cubic-bezier(.2,.9,.25,1);
+  background:rgba(26,29,35,.72);
+  border-radius:34px 34px 0 0;animation:up .5s cubic-bezier(.2,.9,.25,1);
   --gapc:#1d2026;--acc:var(--orange);max-height:92%;overflow-y:auto}
 #detail.pd .panel{--acc:var(--blue)}
-#detail.closing{animation:fadeOut .25s ease-in forwards}
-#detail.closing .panel{animation:down .28s cubic-bezier(.4,0,1,1) forwards}
+#detail.closing{animation:fadeOut .25s cubic-bezier(.55,0,.7,.4) forwards}
+#detail.closing .panel{animation:down .28s cubic-bezier(.55,0,.7,.4) forwards}
 @keyframes fadeOut{to{opacity:0}}
 @keyframes down{to{transform:translateY(100%)}}
 #detail .grab{width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,.18);align-self:center;margin:-8px 0 0}
-.dclose{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.dclose{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);}
 .dclose svg{width:16px;height:16px;opacity:.8}
 .dfig{align-self:center;width:min(70vw,34vh,280px);aspect-ratio:1;margin:4px 0 2px}
 .dfig .fig{width:100%;height:100%}
-#detail .eyebrow{color:var(--acc);opacity:1}
+#detail 
 #detail h3{font-family:var(--display);font-weight:700;font-size:clamp(34px,10vw,46px);line-height:.92;margin:0;text-transform:uppercase;text-wrap:balance}
 .dcue{font-size:17px;line-height:1.38;margin:0;opacity:.88;text-wrap:pretty}
 .dcue small{display:block;margin-top:6px;font-size:14px;font-weight:600;opacity:.7}
 .dspec{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0}
-.dspec span{font-family:var(--display);font-weight:600;font-size:14px;letter-spacing:.08em;text-transform:uppercase;padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.dspec span{font-family:var(--display);font-weight:600;font-size:14px;letter-spacing:.08em;text-transform:uppercase;padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.07);}
 .dsets{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 4px}
 .dsets > span{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.seg{display:grid;grid-template-columns:repeat(3,52px);padding:4px;border-radius:999px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);position:relative}
+.seg{display:grid;grid-template-columns:repeat(3,52px);padding:4px;border-radius:999px;background:rgba(255,255,255,.07);position:relative}
 .seg button{position:relative;z-index:1;height:38px;border-radius:999px;font-family:var(--display);font-weight:700;font-size:18px;color:var(--muted);transition:color .25s}
 .seg button[aria-checked="true"]{color:var(--dark)}
 .seg::before{content:"";position:absolute;top:4px;left:4px;width:52px;height:38px;border-radius:999px;background:var(--orange);transform:translateX(calc(var(--si,0) * 52px));transition:transform .45s cubic-bezier(.3,1.3,.4,1)}
@@ -304,7 +304,7 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 
 /* ---- pause sheet ---- */
 #sheet{position:fixed;inset:0;z-index:5;background:rgba(8,9,11,.35);display:flex;align-items:flex-end;animation:fade .2s ease-out}
-#sheet .panel{width:100%;box-sizing:border-box;padding:22px 22px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;gap:12px;background:rgba(26,29,35,.62);-webkit-backdrop-filter:blur(28px) saturate(1.8);backdrop-filter:blur(28px) saturate(1.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 -10px 40px rgba(0,0,0,.35);border-radius:32px 32px 0 0;animation:up .45s cubic-bezier(.2,.9,.25,1)}
+#sheet .panel{width:100%;box-sizing:border-box;padding:22px 22px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;gap:12px;background:rgba(26,29,35,.62);border-radius:32px 32px 0 0;animation:up .45s cubic-bezier(.2,.9,.25,1)}
 #sheet .head{display:flex;align-items:center;gap:14px;margin-bottom:2px}
 #sheet .head .ring{width:56px;height:56px;color:var(--ink);--acc:var(--orange);--pd:var(--blue)}
 #sheet .head b{display:block;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
@@ -312,7 +312,7 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 #sheet h3{font-family:var(--display);font-weight:700;font-size:44px;line-height:.9;margin:0;text-transform:uppercase}
 #sheet .info{color:var(--ink);font-size:16px;margin:0 0 6px;opacity:.8}
 #sheet .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-#sheet .row button{min-height:54px;border-radius:16px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);font-weight:600;font-size:16px;transition:transform .15s}
+#sheet .row button{min-height:54px;border-radius:16px;background:rgba(255,255,255,.08);font-weight:600;font-size:16px;transition:transform .15s}
 #sheet .row button:active{transform:scale(.97)}
 #sheet .row button:disabled{opacity:.35}
 #sheet .low{display:flex;justify-content:center;align-items:center;margin-top:2px}
@@ -328,6 +328,112 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
   .h-hero::before,.home .go::after,
   .enter > *,.enter .mid > *,.enter .center > *,.tapto,.sw-in{animation:none}
 }
+
+/* =====================================================================
+   TEMA "GOMITO" (taste-skill, direzione one-motif, seed 506298188)
+   Il motivo: l'angolo retto arrotondato del gomito piegato a 90°, presente in tutti gli esercizi.
+   Diventa la forma gigante della Home e la forma di bottoni, cornici e pannelli
+   (angoli dritti, un solo angolo tondo dove sta il gomito).
+   ===================================================================== */
+:root{
+  --bg:#000000; --ink:#ffffff; --muted:#a3a3a3; --line:#161616; --panel:#111111;
+  --orange:#93f1f7;   /* accento: ciano */
+  --ready:#f3ea7a;    /* limone: i 5" prima */
+  --red:#fbb65c;      /* arancio: spingi */
+  --green:#9ae187;    /* menta: riposa */
+  --blue:#b9c8ff;     /* fiordaliso: pendolo */
+  --dark:#000000; --yellow:#f3ea7a;
+  --display:"Fredoka","Arial Rounded MT Bold",system-ui,sans-serif;
+  --body:"Fredoka",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --elbow:6px 6px 6px 30px;            /* la forma del motivo: un solo angolo tondo, in basso a sinistra */
+  --elbow-s:4px 4px 4px 18px;
+}
+#stage[data-tone="ready"]{--tone:var(--ready);--tink:#000;--tacc:#000}
+#stage[data-tone="done"]{--tone:var(--orange);--tink:#000;--tacc:#000}
+#stage[data-tone="pend"]{--tone:var(--blue);--tink:#000;--tacc:#000}
+body{font-family:var(--body)}
+
+/* regole della casa: niente maiuscoletto spaziato, vetro, bagliori, sfumature, ombre a riposo */
+.top,.pill strong,.pill small,.phase,.go,.go small,.h-sec,.pc b,.ready h2,#sheet h3,#detail h3,.dspec span,.done h1,.exname,.mid-note,#remind .col b,#sheet .head b{text-transform:lowercase!important;letter-spacing:0!important}
+.glass{background:var(--panel);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.layer.fill .glass{background:rgba(0,0,0,.12)}
+.go::after,.h-hero::before{display:none!important}
+.enter > *, .enter .mid > *, .enter .center > *{animation-name:enterT}
+@keyframes enterT{from{opacity:0;transform:translateY(18px)}}
+
+/* bottoni: piatti, ciano, forma del gomito */
+.go{background:var(--orange);color:#000;border-radius:var(--elbow);font-family:var(--display);font-weight:700;font-size:28px;min-height:64px;transition:transform .15s ease,background-color .15s ease}
+.go:active{transform:scale(.97)}
+.go small{font-family:var(--body);font-weight:500;font-size:15px;opacity:.75}
+
+/* ---- Home ---- */
+.home{padding-bottom:0;gap:0;justify-content:flex-start}
+.t-hero{position:relative;min-height:calc(100svh - env(safe-area-inset-top,0px) - 16px);margin:0 -22px;padding:0 22px;overflow:hidden;flex-shrink:0}
+.t-elbow{position:absolute;left:6vw;bottom:3svh;width:110vw;height:auto;overflow:visible;fill:var(--orange)}
+.t-copy{position:relative;padding-top:8svh;display:flex;flex-direction:column;gap:18px;max-width:30ch}
+.home .t-copy h1{font-family:var(--display);font-weight:700;font-size:clamp(84px,25vw,180px);line-height:.88;letter-spacing:-.05em;margin:0;text-transform:none}
+.t-copy p{font-size:clamp(17px,4.6vw,20px);line-height:1.45;margin:0;color:var(--ink);max-width:24ch}
+.t-act{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-top:6px}
+.t-act .go{width:auto;min-width:200px;padding:0 34px;flex-direction:column;justify-content:center;gap:2px}
+.t-link{font-size:16px;font-weight:500;color:var(--ink);text-decoration:underline;text-underline-offset:4px;min-height:44px}
+.t-list{padding:96px 0 72px}
+.t-lh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:28px}
+.t-lh h2{font-family:var(--display);font-weight:700;font-size:clamp(36px,9vw,56px);letter-spacing:-.04em;line-height:.95;margin:0}
+.t-lh span{font-size:16px;color:var(--muted)}
+.t-rows{display:flex;flex-direction:column;gap:18px}
+.t-row{display:grid;grid-template-columns:72px 1fr;align-items:center;gap:18px;text-align:left;min-height:72px;border-radius:var(--elbow-s);transition:transform .15s ease}
+.t-row:active{transform:scale(.98)}
+.t-row .pc{display:block;width:72px;height:72px;aspect-ratio:auto;padding:4px;box-sizing:border-box;border-radius:var(--elbow-s);box-shadow:none;--card:var(--orange);background:var(--card);--gapc:var(--card);--acc:#000;color:#000;overflow:hidden}
+.t-row .pc .fig{width:100%;height:100%;transform:none}
+.t-row .pc .fig .bd{opacity:.42}
+.t-row:nth-child(1) .pc{--card:#9ae187}
+.t-row:nth-child(2) .pc{--card:#93f1f7}
+.t-row:nth-child(3) .pc{--card:#f3ea7a}
+.t-row:nth-child(4) .pc{--card:#fbb65c}
+.t-row:nth-child(5) .pc{--card:#b9c8ff}
+.t-row:nth-child(6) .pc{--card:#9ae187}
+.t-row .pc.pd{--card:#b9c8ff;grid-column:auto;position:static}
+.t-row .pc.pd .fig{position:static;height:100%}
+.t-rt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.t-rt b{font-family:var(--display);font-weight:600;font-size:19px;line-height:1.15}
+.t-rt small{font-size:15px;color:var(--muted)}
+.t-band{position:relative;display:block;width:calc(100% + 44px);margin:0 -22px;height:46svh;min-height:300px;background:var(--orange);color:#000;text-align:left;border-radius:44px 0 0 0;overflow:hidden;padding:0;transition:background-color .15s ease,color .15s ease}
+.t-band:active,.t-band:focus-visible{background:#000;color:var(--orange);outline:none}
+.t-note{position:absolute;left:22px;top:26px;right:90px;font-size:17px;line-height:1.4;font-weight:500}
+.t-arrow{position:absolute;right:22px;top:22px;width:40px;height:40px;fill:none;stroke:currentColor;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
+.t-word{position:absolute;left:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);font-family:var(--display);font-weight:700;font-size:min(26vw,190px);line-height:.8;letter-spacing:-.06em}
+
+/* ---- pillola, esercizio, schermata prima ---- */
+.pill{border-radius:var(--elbow-s);padding:6px 18px 6px 6px}
+.pill strong{font-family:var(--display);font-weight:700;font-size:34px}
+.pill small{font-size:13px;opacity:.75}
+.phase{font-family:var(--display);font-weight:600;font-size:clamp(26px,7vw,34px);padding-left:0}
+.ready h2{font-family:var(--display);font-weight:700;letter-spacing:-.04em!important}
+.reps i{border-width:2px}
+
+/* ---- pausa, pannello, promemoria: superfici piatte, forma del gomito ---- */
+#sheet{background:rgba(0,0,0,.55)}
+#sheet .panel,#detail .panel{background:var(--panel);box-shadow:none;border-radius:30px 30px 0 0}
+#detail .panel{--gapc:var(--panel);--acc:var(--orange)}
+#sheet .row button{background:#1d1d1d;box-shadow:none;border-radius:var(--elbow-s)}
+#sheet .quit{color:var(--red)}
+.dclose{background:#1d1d1d;box-shadow:none}
+.dspec span{background:#1d1d1d;box-shadow:none;border-radius:var(--elbow-s)}
+#remind{--gapc:var(--ready);--acc:#000}
+#remind .card{background:var(--ready);color:#000;box-shadow:none;border-radius:var(--elbow)}
+#remind .sep{background:#000;opacity:.18}
+.done h1{font-family:var(--display);letter-spacing:-.05em!important}
+
+.t-elbow{animation:shutter 1.1s cubic-bezier(.2,.8,.2,1) .15s both}
+@keyframes shutter{from{clip-path:inset(0 0 0 100%);transform:scale(1.06);transform-origin:20% 80%}to{clip-path:inset(0 0 0 0);transform:none}}
+.t-copy > *{animation:enterT .6s cubic-bezier(.2,.8,.2,1) both}
+.t-copy > :nth-child(2){animation-delay:.08s}.t-copy > :nth-child(3){animation-delay:.16s}
+.t-row{animation:enterT .6s cubic-bezier(.2,.8,.2,1) both}
+.t-row:nth-child(2){animation-delay:.07s}.t-row:nth-child(3){animation-delay:.14s}.t-row:nth-child(4){animation-delay:.21s}
+.t-row:nth-child(5){animation-delay:.28s}.t-row:nth-child(6){animation-delay:.35s}.t-row:nth-child(7){animation-delay:.42s}
+.t-lh,.t-band{animation:enterT .6s cubic-bezier(.2,.8,.2,1) .1s both}
+@media (min-width:700px){.t-elbow{left:auto;right:-12vw;width:62vw}.t-copy{max-width:44vw}}
+@media (prefers-reduced-motion:reduce){.t-elbow,.t-copy > *,.t-row,.t-lh,.t-band{animation:none}}
 </style>
 
 </head>
@@ -348,7 +454,6 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
     <div class="grab"></div>
     <button class="dclose" data-act="closeDetail" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div class="dfig" id="dFig"></div>
-    <div class="eyebrow" id="dEyebrow"></div>
     <h3 id="dTitle"></h3>
     <p class="dcue" id="dCue"></p>
     <div class="dspec" id="dSpec"></div>
@@ -638,7 +743,7 @@ function bell(freq, dur = .4, vol = .3, delay = 0) {
    ma toccare uno switch nativo (iOS 18+) fa scattare il Taptic Engine. */
 const hap = document.createElement('label');
 hap.className = 'hap'; hap.setAttribute('aria-hidden', 'true');
-hap.style.cssText = 'position:fixed;left:-200px;top:0;width:1px;height:1px;opacity:0;pointer-events:none';
+hap.style.cssText = 'position:fixed;left:-200px;top:0;width:2px;height:2px;opacity:0;pointer-events:none';
 hap.innerHTML = '<input type="checkbox" switch tabindex="-1">';
 document.body.appendChild(hap);
 function haptic() { try { if (navigator.vibrate) navigator.vibrate(12); else hap.click(); } catch {} }
@@ -993,17 +1098,27 @@ function homeView() {
        <button class="go alt" data-act="start"><span>Inizia</span><small>Da capo</small></button></div>`
     : `<button class="go" data-act="start"><span>${doneToday ? 'Allenati ancora' : 'Inizia'}</span>${ARROW}</button>`;
 
+  const rows = EX.map((e, k) => `<button class="t-row" data-act="detail" data-i="${k}"><span class="pc">${figSvg(S.homeFigs[k])}</span><span class="t-rt"><b>${e.name.toLowerCase()}</b><small>${CFG.push}″ spingi, ${CFG.rest}″ riposo, ${CFG.reps} volte</small></span></button>`).join('')
+    + `<button class="t-row pd" data-act="detail" data-i="${EX.length}"><span class="pc pd">${figSvg(S.homeFigs[EX.length])}</span><span class="t-rt"><b>pendolo</b><small>alla fine: ${PEND.length} movimenti da ${CFG.pend}″</small></span></button>`;
+  const lead = doneToday && !canResume ? `oggi l'hai già fatto. ${EX.length} esercizi, ${CFG.rounds} giri e il pendolo.`
+    : `${EX.length} esercizi isometrici, ${CFG.rounds} giri e il pendolo. circa ${mins} minuti.`;
+  const heroBtn = canResume
+    ? `<button class="go" data-act="resumeSession"><span>riprendi</span><small>${rs.kind === 'iso' ? `giro ${rs.round}, ${rs.ex.short.toLowerCase()}` : `pendolo`}</small></button><button class="t-link" data-act="start">ricomincia da capo</button>`
+    : `<button class="go" data-act="start"><span>${doneToday ? 'ancora' : 'inizia'}</span></button>`;
   return `<div class="screen home enter">
-    <header class="h-top"><div class="eyebrow">${date}</div><h1>Spalla</h1></header>
-    <div class="h-mid">
-      <section class="h-hero" aria-label="Avanzamento di oggi">${ring(SEGW.map(() => 0))}<div class="h-center">${center}</div></section>
-      <div class="h-sub">${doneToday && !canResume ? '<b>Fatto oggi</b>' : `${EX.length} esercizi · ${CFG.rounds} giri · pendolo`}</div>
-    </div>
-    <section class="h-plan">
-      <div class="h-sec"><span>Il programma</span><span>${CFG.push}″ spingi · ${CFG.rest}″ riposo</span></div>
-      <div class="h-grid">${cards}</div>
+    <section class="t-hero">
+      <svg class="t-elbow" viewBox="0 0 100 60" aria-hidden="true"><path d="M10 12A12 12 0 0 1 34 12L34 30A6 6 0 0 0 40 36L140 36L140 60L24 60A14 14 0 0 1 10 46Z"/></svg>
+      <div class="t-copy"><h1>spalla</h1><p>${lead}</p><div class="t-act">${heroBtn}</div></div>
     </section>
-    <div class="actions">${actions}</div>
+    <section class="t-list">
+      <div class="t-lh"><h2>gli esercizi</h2><span>${EX.length + 1}</span></div>
+      <div class="t-rows">${rows}</div>
+    </section>
+    <button class="t-band" data-act="${canResume ? 'resumeSession' : 'start'}">
+      <span class="t-note">${canResume ? 'riparti da dove eri rimasto.' : `si parte dal pugno contro la parete. dura circa ${mins} minuti.`}</span>
+      <svg class="t-arrow" viewBox="0 0 48 48" aria-hidden="true"><path d="M14 34L34 14M18 14H34V30"/></svg>
+      <span class="t-word">${canResume ? 'riprendi' : 'inizia'}</span>
+    </button>
   </div>`;
 }
 function readyView(st) {
@@ -1035,7 +1150,6 @@ function doneView() {
   const stk = streak();
   return `<div class="screen done enter">
     ${ring(undefined, '<path class="check" d="M16 24.5l5.5 5.5L32.5 19"/>')}
-    <div class="eyebrow">${S.custom ? 'Esercizio completato' : 'Sessione completata'} · 100%</div>
     <h1>Fatto.</h1>
     <p>${S.custom ? `${S.custom} · ${STEPS.filter(x => x.kind === 'iso').length * CFG.reps || PEND.length + ' movimenti'}${STEPS[0].kind === 'iso' ? ' spinte' : ''}` : `${CFG.rounds} giri · ${EX.length * CFG.rounds * CFG.reps} spinte · pendolo`} · ${mins} min</p>
 
@@ -1273,7 +1387,6 @@ function openDetail(i) {
   D_.fig = pend ? PEND[0].fig() : ex.fig();
   detailEl.classList.toggle('pd', pend);
   document.getElementById('dFig').innerHTML = figSvg(D_.fig);
-  document.getElementById('dEyebrow').textContent = pend ? 'Alla fine dei 3 giri' : `Esercizio ${i + 1} di ${EX.length}`;
   document.getElementById('dTitle').textContent = pend ? 'Pendolo' : ex.name;
   document.getElementById('dCue').innerHTML = pend
     ? `Altra mano sul tavolo, busto in avanti, braccio morbido. Tre movimenti: avanti e indietro, laterale, cerchietti.`
