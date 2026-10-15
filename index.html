@@ -368,15 +368,10 @@ body{font-family:var(--body)}
 
 /* ---- Home ---- */
 .home{padding-bottom:0;gap:0;justify-content:flex-start}
-.t-hero{position:relative;min-height:calc(100svh - env(safe-area-inset-top,0px) - 16px);margin:0 -22px;padding:0 22px;overflow:hidden;flex-shrink:0}
+.t-hero{position:relative;min-height:100svh;margin:0 -22px;padding:0 22px;overflow:hidden;flex-shrink:0}
 .t-elbow{position:absolute;left:6vw;bottom:3svh;width:110vw;height:auto;overflow:visible;fill:var(--orange)}
-/* la spalla: busto dell'omino in grande, tagliato dal bordo in basso */
-.t-shoulder{left:-6vw;bottom:-12svh;width:100vw}
-.t-shoulder .sh-c{stroke:var(--orange)}
-.t-shoulder .sh-f{fill:var(--orange)}
-.t-shoulder .sh-g{stroke:var(--bg)}
-.t-shoulder .sh-ring{stroke:var(--orange);transform-box:fill-box;transform-origin:center;animation:shRing 2.4s cubic-bezier(.2,.8,.2,1) 1.3s infinite}
-@keyframes shRing{0%{transform:scale(.7);opacity:0}25%{opacity:.9}100%{transform:scale(1.5);opacity:0}}
+/* la spalla: la linea delle spalle entra da sinistra, curva tonda (la spalla) e scende come il braccio */
+.t-shoulder{left:-4vw;bottom:3svh;width:110vw}
 .t-copy{position:relative;padding-top:8svh;display:flex;flex-direction:column;gap:18px;max-width:30ch}
 .home .t-copy h1{font-family:var(--display);font-weight:700;font-size:clamp(84px,25vw,180px);line-height:.88;letter-spacing:-.05em;margin:0;text-transform:none}
 .t-copy p{font-size:clamp(17px,4.6vw,20px);line-height:1.45;margin:0;color:var(--ink);max-width:24ch}
@@ -439,8 +434,8 @@ body{font-family:var(--body)}
 .t-row:nth-child(2){animation-delay:.07s}.t-row:nth-child(3){animation-delay:.14s}.t-row:nth-child(4){animation-delay:.21s}
 .t-row:nth-child(5){animation-delay:.28s}.t-row:nth-child(6){animation-delay:.35s}.t-row:nth-child(7){animation-delay:.42s}
 .t-lh,.t-band{animation:enterT .6s cubic-bezier(.2,.8,.2,1) .1s both}
-@media (min-width:700px){.t-elbow{left:auto;right:-12vw;width:62vw}.t-shoulder{bottom:-18svh;width:58vw}.t-copy{max-width:44vw}}
-@media (prefers-reduced-motion:reduce){.t-shoulder .sh-ring,.t-elbow,.t-copy > *,.t-row,.t-lh,.t-band{animation:none}}
+@media (min-width:700px){.t-elbow{left:auto;right:-12vw;width:62vw}.t-copy{max-width:44vw}}
+@media (prefers-reduced-motion:reduce){.t-elbow,.t-copy > *,.t-row,.t-lh,.t-band{animation:none}}
 </style>
 
 </head>
@@ -1114,15 +1109,7 @@ function homeView() {
     : `<button class="go" data-act="start"><span>${doneToday ? 'ancora' : 'inizia'}</span></button>`;
   return `<div class="screen home enter">
     <section class="t-hero">
-      <svg class="t-elbow t-shoulder" viewBox="0 0 100 80" aria-hidden="true"><g stroke-linecap="round" stroke-linejoin="round" fill="none">
-        <path class="sh-c" d="M36 36L88 36" stroke-width="17"/>
-        <path class="sh-c" d="M62 44L62 100" stroke-width="32"/>
-        <circle class="sh-f" cx="62" cy="15" r="11"/>
-        <path class="sh-c" d="M36 37L31 64L30 90" stroke-width="12"/>
-        <path class="sh-g" d="M88 37L93 64L94 90" stroke-width="19"/>
-        <path class="sh-c" d="M88 37L93 64L94 90" stroke-width="12"/>
-        <circle class="sh-ring" cx="88" cy="36" r="13" stroke-width="2.6"/>
-      </g></svg>
+      <svg class="t-elbow t-shoulder" viewBox="0 0 100 60" aria-hidden="true"><path d="M-40 10L76 10A14 14 0 0 1 90 24L90 100L66 100L66 40A6 6 0 0 0 60 34L-40 34Z"/></svg>
       <div class="t-copy"><h1>spalla</h1><p>${lead}</p><div class="t-act">${heroBtn}</div></div>
     </section>
     <section class="t-list">
