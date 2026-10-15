@@ -345,8 +345,8 @@ button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
   --dark:#000000; --yellow:#f3ea7a;
   --display:"Fredoka","Arial Rounded MT Bold",system-ui,sans-serif;
   --body:"Fredoka",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --elbow:6px 6px 6px 30px;            /* la forma del motivo: un solo angolo tondo, in basso a sinistra */
-  --elbow-s:4px 4px 4px 18px;
+  --elbow:6px 30px 6px 6px;            /* la forma del motivo: un solo angolo tondo, in alto a destra, come la curva della spalla */
+  --elbow-s:4px 18px 4px 4px;
 }
 #stage[data-tone="ready"]{--tone:var(--ready);--tink:#000;--tacc:#000}
 #stage[data-tone="done"]{--tone:var(--orange);--tink:#000;--tacc:#000}
@@ -370,6 +370,13 @@ body{font-family:var(--body)}
 .home{padding-bottom:0;gap:0;justify-content:flex-start}
 .t-hero{position:relative;min-height:calc(100svh - env(safe-area-inset-top,0px) - 16px);margin:0 -22px;padding:0 22px;overflow:hidden;flex-shrink:0}
 .t-elbow{position:absolute;left:6vw;bottom:3svh;width:110vw;height:auto;overflow:visible;fill:var(--orange)}
+/* la spalla: busto dell'omino in grande, tagliato dal bordo in basso */
+.t-shoulder{left:-6vw;bottom:-12svh;width:100vw}
+.t-shoulder .sh-c{stroke:var(--orange)}
+.t-shoulder .sh-f{fill:var(--orange)}
+.t-shoulder .sh-g{stroke:var(--bg)}
+.t-shoulder .sh-ring{stroke:var(--orange);transform-box:fill-box;transform-origin:center;animation:shRing 2.4s cubic-bezier(.2,.8,.2,1) 1.3s infinite}
+@keyframes shRing{0%{transform:scale(.7);opacity:0}25%{opacity:.9}100%{transform:scale(1.5);opacity:0}}
 .t-copy{position:relative;padding-top:8svh;display:flex;flex-direction:column;gap:18px;max-width:30ch}
 .home .t-copy h1{font-family:var(--display);font-weight:700;font-size:clamp(84px,25vw,180px);line-height:.88;letter-spacing:-.05em;margin:0;text-transform:none}
 .t-copy p{font-size:clamp(17px,4.6vw,20px);line-height:1.45;margin:0;color:var(--ink);max-width:24ch}
@@ -397,7 +404,7 @@ body{font-family:var(--body)}
 .t-rt{display:flex;flex-direction:column;gap:3px;min-width:0}
 .t-rt b{font-family:var(--display);font-weight:600;font-size:19px;line-height:1.15}
 .t-rt small{font-size:15px;color:var(--muted)}
-.t-band{position:relative;display:block;width:calc(100% + 44px);margin:0 -22px;height:46svh;min-height:300px;background:var(--orange);color:#000;text-align:left;border-radius:44px 0 0 0;overflow:hidden;padding:0;transition:background-color .15s ease,color .15s ease}
+.t-band{position:relative;display:block;width:calc(100% + 44px);margin:0 -22px;height:46svh;min-height:300px;background:var(--orange);color:#000;text-align:left;border-radius:0 44px 0 0;overflow:hidden;padding:0;transition:background-color .15s ease,color .15s ease}
 .t-band:active,.t-band:focus-visible{background:#000;color:var(--orange);outline:none}
 .t-note{position:absolute;left:22px;top:26px;right:90px;font-size:17px;line-height:1.4;font-weight:500}
 .t-arrow{position:absolute;right:22px;top:22px;width:40px;height:40px;fill:none;stroke:currentColor;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
@@ -432,8 +439,8 @@ body{font-family:var(--body)}
 .t-row:nth-child(2){animation-delay:.07s}.t-row:nth-child(3){animation-delay:.14s}.t-row:nth-child(4){animation-delay:.21s}
 .t-row:nth-child(5){animation-delay:.28s}.t-row:nth-child(6){animation-delay:.35s}.t-row:nth-child(7){animation-delay:.42s}
 .t-lh,.t-band{animation:enterT .6s cubic-bezier(.2,.8,.2,1) .1s both}
-@media (min-width:700px){.t-elbow{left:auto;right:-12vw;width:62vw}.t-copy{max-width:44vw}}
-@media (prefers-reduced-motion:reduce){.t-elbow,.t-copy > *,.t-row,.t-lh,.t-band{animation:none}}
+@media (min-width:700px){.t-elbow{left:auto;right:-12vw;width:62vw}.t-shoulder{bottom:-18svh;width:58vw}.t-copy{max-width:44vw}}
+@media (prefers-reduced-motion:reduce){.t-shoulder .sh-ring,.t-elbow,.t-copy > *,.t-row,.t-lh,.t-band{animation:none}}
 </style>
 
 </head>
@@ -1107,7 +1114,15 @@ function homeView() {
     : `<button class="go" data-act="start"><span>${doneToday ? 'ancora' : 'inizia'}</span></button>`;
   return `<div class="screen home enter">
     <section class="t-hero">
-      <svg class="t-elbow" viewBox="0 0 100 60" aria-hidden="true"><path d="M10 12A12 12 0 0 1 34 12L34 30A6 6 0 0 0 40 36L140 36L140 60L24 60A14 14 0 0 1 10 46Z"/></svg>
+      <svg class="t-elbow t-shoulder" viewBox="0 0 100 80" aria-hidden="true"><g stroke-linecap="round" stroke-linejoin="round" fill="none">
+        <path class="sh-c" d="M36 36L88 36" stroke-width="17"/>
+        <path class="sh-c" d="M62 44L62 100" stroke-width="32"/>
+        <circle class="sh-f" cx="62" cy="15" r="11"/>
+        <path class="sh-c" d="M36 37L31 64L30 90" stroke-width="12"/>
+        <path class="sh-g" d="M88 37L93 64L94 90" stroke-width="19"/>
+        <path class="sh-c" d="M88 37L93 64L94 90" stroke-width="12"/>
+        <circle class="sh-ring" cx="88" cy="36" r="13" stroke-width="2.6"/>
+      </g></svg>
       <div class="t-copy"><h1>spalla</h1><p>${lead}</p><div class="t-act">${heroBtn}</div></div>
     </section>
     <section class="t-list">
